@@ -332,6 +332,11 @@ table{width:100%;border-collapse:collapse}
   <!-- PRICES -->
   <section class="view" id="view-prices" hidden>
     <div class="card">
+      <h2>Receipts and cash drawer</h2>
+      <p>The cash drawer is plugged into the receipt printer and opens whenever something prints. OD with no sale prints a small "No sale" slip to open it.</p>
+      <div class="form" style="max-width:360px"><label>Print a receipt automatically<select id="rcMode"><option value="cash">For cash sales and refunds (opens the drawer)</option><option value="all">For every sale</option><option value="ask">Only when I tap Receipt</option></select></label></div>
+    </div>
+    <div class="card">
       <h2>Departments</h2>
       <p>The coloured department buttons on the till, in this order. Type a price then tap one to ring it up. A department can't be removed while stickers use it.</p>
       <div class="tblwrap"><table class="tbl" id="deptTable"></table></div>
@@ -637,6 +642,7 @@ function deptTap(cat){
   if(cat.id==='od' && !S.sale.lines.length && !pendingQty){
     (S.drawerOpens=S.drawerOpens||[]).push({time:new Date().toISOString(), till:S.till, staff:S.staff||''});
     logEvent('Drawer opened','No sale');
+    printNoSale();
     save(); toast('Cash drawer opened (no sale)'); return;
   }
   openPrice(cat);
@@ -709,6 +715,8 @@ function finishNow(method,extra){
   lastResult = rec;
   S.sale=newSale(); selected=-1; pendingQty=0; entry=''; keyMode='main';
   save(); renderAll();
+  const mode=S.receiptMode||'cash'; // printing is what kicks the drawer open
+  if(mode==='all' || (mode==='cash' && (method==='Cash' || rec.total<0))) printReceipt(rec);
 }
 function cash(amount){
   if(!S.sale.lines.length){ toast('Nothing in the sale yet',true); return; }
@@ -785,6 +793,14 @@ function printReceipt(r){
   st.textContent='@page{size:80mm 200mm;margin:0}';
   $('#printArea').innerHTML=receiptHtml(r);
   try{ window.print(); }catch(e){ toast('This page could not open the print window',true); }
+}
+
+function printNoSale(){ // a short slip, so the printer kicks the drawer open
+  let st=$('#printPos'); if(!st){ st=document.createElement('style'); st.id='printPos'; document.head.appendChild(st); }
+  st.textContent='@page{size:80mm 40mm;margin:0}';
+  const d=new Date();
+  $('#printArea').innerHTML=`<div class="receipt"><div class="c"><b>NO SALE</b><br>${d.toLocaleDateString('en-AU')} ${d.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'})}<br>${esc(S.till)}${S.staff?' · '+esc(S.staff):''}</div></div>`;
+  try{ window.print(); }catch(e){}
 }
 
 /* ---------- render: till ---------- */
@@ -1540,6 +1556,8 @@ if(S.countedDay!==isoDay(new Date())){ S.counted=''; S.countedDay=isoDay(new Dat
 $('#view-eod').addEventListener('click',e=>{ const r=e.target.closest('[data-rc]'); if(r) showReceipt(S.sales.find(x=>x.no==r.dataset.rc)); });
 $('#clearExamples').addEventListener('click',()=>{ clearExampleSales(); renderEod(); });
 $('#toReports').addEventListener('click',()=>setView('rep'));
+$('#rcMode').value=S.receiptMode||'cash';
+$('#rcMode').addEventListener('change',e=>{ S.receiptMode=e.target.value; save(); });
 fillStaff();
 $('#staffName').addEventListener('change',e=>{ if(e.target.value==='__edit'){ editStaff(); return; } S.staff=e.target.value; save(); toast(`${S.staff} is serving`); });
 $('#repRange').addEventListener('click',e=>{ const b=e.target.closest('[data-r]'); if(!b) return; repRange=b.dataset.r;
