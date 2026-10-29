@@ -244,6 +244,7 @@ table{width:100%;border-collapse:collapse}
   /* thermal printers turn grey and thin text into faint dots, so receipts print in solid black, heavier type */
   #printArea .receipt{box-shadow:none;border-radius:0;width:64mm;margin:0 0 0 5mm;padding:2mm 3mm;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#000;background:#fff;line-height:1.35}
   #printArea .receipt b{font-weight:800}
+  #printArea .receipt div{break-inside:avoid}
   #printArea .receipt hr{border-top:1px solid #000}
   #printArea .sticker.a{box-shadow:none;border-radius:0;margin:0;break-after:page;page-break-after:always}
   #printArea .sticker.a:last-child{break-after:auto;page-break-after:auto}
@@ -337,7 +338,8 @@ table{width:100%;border-collapse:collapse}
     <div class="card">
       <h2>Receipts and cash drawer</h2>
       <p>The cash drawer is plugged into the receipt printer and opens whenever something prints. OD with no sale prints a small "No sale" slip to open it.</p>
-      <div class="form" style="max-width:360px"><label>Print a receipt automatically<select id="rcMode"><option value="cash">For cash sales and refunds (opens the drawer)</option><option value="all">For every sale</option><option value="ask">Only when I tap Receipt</option></select></label></div>
+      <div class="form" style="max-width:360px"><label>Print a receipt automatically<select id="rcMode"><option value="cash">For cash sales and refunds (opens the drawer)</option><option value="all">For every sale</option><option value="ask">Only when I tap Receipt</option></select></label>
+      <label>Receipt paper<select id="rcPaper"><option value="fit">Sized to each receipt</option><option value="50">50mm pages (Epson "User Defined Paper" 80 × 50mm)</option></select></label></div>
     </div>
     <div class="card">
       <h2>Departments</h2>
@@ -798,7 +800,9 @@ function receiptPage(html){
   m.innerHTML=html.replace(/^<div class="receipt">|<\/div>$/g,''); document.body.appendChild(m);
   const mm=Math.ceil(m.getBoundingClientRect().height/3.7795)+12; m.remove();
   let st=$('#printPos'); if(!st){ st=document.createElement('style'); st.id='printPos'; document.head.appendChild(st); }
-  st.textContent=`@page{size:80mm ${Math.max(40,mm)}mm;margin:0}`;
+  // some Epson drivers ignore the page length and feed a whole 297mm sheet; with a short user-defined
+  // paper the receipt runs over several 50mm pages with no cut between them, so little paper is wasted
+  st.textContent= S.receiptPaper==='50' ? '@page{size:80mm 50mm;margin:0}' : `@page{size:80mm ${Math.max(40,mm)}mm;margin:0}`;
   $('#printArea').innerHTML=html;
 }
 function printReceipt(r){
@@ -1567,6 +1571,8 @@ $('#clearExamples').addEventListener('click',()=>{ clearExampleSales(); renderEo
 $('#toReports').addEventListener('click',()=>setView('rep'));
 $('#rcMode').value=S.receiptMode||'cash';
 $('#rcMode').addEventListener('change',e=>{ S.receiptMode=e.target.value; save(); });
+$('#rcPaper').value=S.receiptPaper||'fit';
+$('#rcPaper').addEventListener('change',e=>{ S.receiptPaper=e.target.value; save(); });
 fillStaff();
 $('#staffName').addEventListener('change',e=>{ if(e.target.value==='__edit'){ editStaff(); return; } S.staff=e.target.value; save(); toast(`${S.staff} is serving`); });
 $('#repRange').addEventListener('click',e=>{ const b=e.target.closest('[data-r]'); if(!b) return; repRange=b.dataset.r;
