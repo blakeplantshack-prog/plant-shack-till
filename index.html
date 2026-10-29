@@ -1,0 +1,1636 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Plant Shack Till</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: a two-pane counter till — the sale on the left, a grid of big touch keys on the right; secondary views (stickers, prices, end of day) behind tabs. */
+:root{
+  --bg:#eef1ea; --surface:#ffffff; --surface-2:#f6f8f3; --ink:#1a2018; --muted:#5b6656; --line:#d6dccf;
+  --accent:#2c7d3a; --accent-ink:#ffffff; --accent-soft:#dcefd9; --select:#e3ecfb; --select-line:#7a9ad6;
+  --warn:#b3261e; --warn-soft:#fbe4e1; --good:#1f7a36;
+  --c-plants:#2f8a3e; --c-pots:#8a4a2a; --c-care:#5a2a4d; --c-gift:#bf3f78; --c-od:#5f6a62; --c-delivery:#e0b52c;
+  --c-bags:#6b1f2c; --c-mix:#1f5ea6; --c-eftpos:#163f6e; --c-action:#2a3128; --c-cash:#f4f1e4; --on-color:#ffffff; --on-light:#1a2018;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10140f; --surface:#1a2018; --surface-2:#151a14; --ink:#e7ece3; --muted:#9aa593; --line:#2d3529;
+  --accent:#58b866; --accent-ink:#0c120b; --accent-soft:#1e3320; --select:#1d2a40; --select-line:#5d7fbf;
+  --warn:#ef7b70; --warn-soft:#3a1d1a; --good:#6fd083; --c-action:#3a4337; --c-cash:#2c2a20; --on-light:#1a2018; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10140f; --surface:#1a2018; --surface-2:#151a14; --ink:#e7ece3; --muted:#9aa593; --line:#2d3529;
+  --accent:#58b866; --accent-ink:#0c120b; --accent-soft:#1e3320; --select:#1d2a40; --select-line:#5d7fbf;
+  --warn:#ef7b70; --warn-soft:#3a1d1a; --good:#6fd083; --c-action:#3a4337; --c-cash:#2c2a20; --on-light:#1a2018; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;font-variant-numeric:tabular-nums}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--select-line);outline-offset:2px}
+.app{min-height:100%;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 16px;gap:12px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:.02em;text-transform:uppercase;display:flex;align-items:baseline;gap:10px}
+.brand small{font-family:var(--f-body);font-weight:500;font-size:12px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;flex-wrap:wrap}
+.tabs button{border:0;background:transparent;padding:7px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+.top-right select{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.trial{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:4px 9px;border-radius:999px}
+
+/* till */
+.till{flex:1;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px;min-height:0}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;min-width:0;min-height:0}
+.scanbar{display:flex;gap:8px;align-items:center;padding:10px;border-bottom:1px solid var(--line)}
+.scanbar label{font-family:var(--f-display);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.scanbar input{flex:1;min-width:0;font:inherit;font-size:18px;padding:9px 12px;border:2px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink)}
+.scanbar input:focus{border-color:var(--accent);outline:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px 0}
+.chip{font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.lines{flex:1;overflow:auto;min-height:220px}
+table{width:100%;border-collapse:collapse}
+.lines th{position:sticky;top:0;background:var(--surface);text-align:left;font-family:var(--f-display);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:13px;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line)}
+.lines td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top;font-size:16px}
+.lines .num{text-align:right;white-space:nowrap}
+.lines tr.row{cursor:pointer}
+.lines tr.row:hover td{background:var(--surface-2)}
+.lines tr.sel td{background:var(--select);box-shadow:inset 0 -2px 0 var(--select-line)}
+.desc{font-weight:600}
+.desc small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+.totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.6fr);border-top:1px solid var(--line)}
+.totals div{padding:10px 12px;border-right:1px solid var(--line)}
+.totals div:last-child{border-right:0;background:var(--ink);color:var(--bg);border-radius:0 0 var(--r) 0}
+.totals span{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.totals div:last-child span{color:inherit;opacity:.75}
+.totals b{font-family:var(--f-display);font-weight:600;font-size:24px}
+.totals div:last-child b{font-size:38px;line-height:1.05}
+.result{margin:10px;padding:12px 14px;border-radius:8px;background:var(--accent-soft);color:var(--good);display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+.result b{font-family:var(--f-display);font-size:34px}
+
+.keys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:8px;align-content:start}
+.key{border:0;border-radius:8px;min-height:60px;padding:8px;font-family:var(--f-display);font-weight:600;font-size:20px;line-height:1.1;color:var(--on-color);background:var(--c-action);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;transition:transform .06s}
+.key:active{transform:scale(.97)}
+.key small{font-family:var(--f-body);font-weight:500;font-size:12px;opacity:.85}
+.key.span2{grid-column:span 2}
+.key.light{color:var(--on-light)}
+.key.cash{background:var(--c-cash);color:var(--ink);border:1px solid var(--line);font-size:24px}
+.key.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.key.danger{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)}
+.key.armed{background:var(--warn);color:#fff}
+.calcdisp{grid-column:1/-1;padding:6px 12px;border-radius:8px;background:var(--surface-2);border:2px solid var(--line);font-family:var(--f-display);font-size:34px;font-weight:600;text-align:right;min-height:64px;line-height:1.1}
+.calcdisp.on{border-color:var(--accent)}
+.calcdisp small{display:block;font-family:var(--f-body);font-size:12px;font-weight:500;color:var(--muted);text-align:left}
+.key.num{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);font-size:28px}
+.sect{grid-column:1/-1;font-family:var(--f-display);font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-size:13px;padding:4px 2px 0}
+.keys-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px 0;font-family:var(--f-display);font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-size:14px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(10,14,9,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal{background:var(--surface);color:var(--ink);border-radius:14px;width:min(440px,100%);max-height:90vh;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--line)}
+.modal.wide{width:min(640px,100%)}
+.modal h2{margin:0;font-family:var(--f-display);font-size:24px;text-transform:uppercase;letter-spacing:.03em}
+.modal p{margin:0;color:var(--muted)}
+.display{font-family:var(--f-display);font-size:44px;font-weight:600;text-align:right;padding:8px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;min-height:68px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pad button{min-height:58px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);font-family:var(--f-display);font-size:26px;font-weight:600}
+.row-btns{display:flex;gap:8px}
+.row-btns button{flex:1;min-height:52px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);font-weight:700;font-size:16px}
+.row-btns .ok{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chiprow{display:flex;gap:6px;flex-wrap:wrap}
+.chiprow button{flex:1;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);font-weight:700}
+.list{display:flex;flex-direction:column;gap:6px}
+.list button{display:flex;justify-content:space-between;gap:10px;text-align:left;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2)}
+
+/* receipt */
+.receipt{font-family:"Courier New",ui-monospace,monospace;font-size:13px;background:#fffdf7;color:#1a1a1a;padding:16px 14px;border-radius:4px;width:min(300px,100%);margin:0 auto;box-shadow:0 1px 0 rgba(0,0,0,.08),0 6px 18px rgba(0,0,0,.12);line-height:1.45}
+.receipt .c{text-align:center}
+.receipt .r{display:flex;justify-content:space-between;gap:8px}
+.receipt hr{border:0;border-top:1px dashed #999;margin:8px 0}
+.note{font-size:13px;color:var(--muted);text-align:center}
+
+/* other views */
+.view{flex:1;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.card h2{margin:0 0 4px;font-family:var(--f-display);font-size:22px;text-transform:uppercase;letter-spacing:.03em}
+.card > p{margin:0 0 12px;color:var(--muted);max-width:65ch}
+.split{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:12px;align-items:start}
+.form{display:flex;flex-direction:column;gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
+.form input,.form select,.tbl input{font:inherit;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.btn{border:0;border-radius:8px;padding:11px 16px;font-weight:700;background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)}
+.btn.armed{background:var(--warn);color:#fff}
+.sheet{display:flex;flex-wrap:wrap;gap:12px;padding:12px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line)}
+.sticker{background:#fff;color:#111;width:220px;border-radius:8px;padding:8px 12px 10px;font-family:Arial,Helvetica,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.sticker .t1{font-weight:700;font-size:15px}
+.sticker .t2{font-size:13px}
+.sticker svg{display:block;margin-top:4px}
+.sticker .bot{display:flex;justify-content:space-between;align-items:baseline;margin-top:2px}
+.sticker .bot b{font-size:22px}
+.sticker .hd{font-size:11px;font-weight:700;letter-spacing:.12em;text-align:center}
+.sticker .pr{font-weight:800;font-size:40px;line-height:1;text-align:center;letter-spacing:-.01em;margin:2px 0}
+.sticker .mt{display:flex;justify-content:space-between;font-size:13px;font-weight:700}
+.sticker .band{background:#111;color:#fff;font-weight:800;font-size:17px;letter-spacing:.08em;text-align:center;margin:-8px -12px 4px;padding:5px 0;border-radius:8px 8px 0 0}
+.sticker .ft{display:flex;justify-content:space-between;font-size:10px;margin-top:2px}
+.sticker.compact{display:flex;gap:8px;align-items:center;width:260px}
+.sticker.compact .pr{font-size:30px;text-align:left}
+.sticker.compact .t2{font-size:11px;font-weight:700}
+.sticker svg{margin-left:auto;margin-right:auto}
+.sticker.a{width:40mm;height:27mm;padding:2.5mm 3mm 2mm;border-radius:2mm;display:flex;flex-direction:column;overflow:hidden}
+.sticker.a .hd{font-size:2.1mm;letter-spacing:.14em}
+.sticker.a .pr{font-size:7.6mm;margin:.2mm 0 0}
+.sticker.a .band2{background:#111;color:#fff;font-weight:800;font-size:2.7mm;letter-spacing:.16em;text-align:center;margin:-2.5mm -3mm .3mm;padding:.7mm 0}
+.sticker.a .was{display:flex;justify-content:center;gap:1.5mm;font-size:2.7mm;font-weight:800;letter-spacing:.06em}
+.sticker.a .was s{text-decoration-thickness:.35mm}
+.sticker.a .mt{font-size:2.4mm;margin-top:0;gap:2mm}
+.sticker.a .mt span:first-child{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.sticker.a svg{margin-top:auto;width:34mm;height:8mm}
+.cmp{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.cmp > span{font-size:13px;font-weight:700;color:var(--muted)}
+.tblwrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl input{width:100%;min-width:70px;padding:6px 8px}
+.tbl .num{text-align:right}
+.tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.tag.ex{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px}
+.stat span{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.stat b{font-family:var(--f-display);font-size:30px;font-weight:600}
+.stat.big{background:var(--ink);color:var(--bg)}
+.stat.big span{color:inherit;opacity:.75}
+.drawer{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end}
+.diff-ok{color:var(--good);font-weight:700}
+.diff-bad{color:var(--warn);font-weight:700}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
+.toast.err{background:var(--warn);color:#fff}
+
+@media (max-width:900px){
+  .till{grid-template-columns:minmax(0,1fr)}
+  .split{grid-template-columns:minmax(0,1fr)}
+  .totals{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .totals div:last-child{grid-column:1/-1;border-radius:0 0 var(--r) var(--r)}
+  .key{min-height:62px;font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){.key{transition:none}}
+#printArea{display:none}
+.rep-split{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.rep-dates{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.tbl tfoot td{font-weight:700;border-top:2px solid var(--line)}
+.linkbtn{border:0;background:none;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
+.chiprow button.on{background:var(--ink);color:var(--bg)}
+.over{color:#2e7d32}.short{color:#b3261e}
+.zb-status{margin:0;font-size:13px;color:var(--muted)}
+.zb-status.ok{color:var(--ok,#2e7d32)}
+.zb-status.bad{color:#b3261e}
+.zb-set{border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.zb-set summary{cursor:pointer;font-weight:600;font-size:14px}
+.zb-set label{margin-top:8px}
+.zb-set .btn{margin-top:10px}
+/* quote / invoice builder */
+.ib-bar{display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.ib-wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.ib-wrap{grid-template-columns:1fr}}
+.ib-build .card{margin-bottom:12px}
+.ib-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.ib-field{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px}
+.ib-field input,.ib-field select,.ib-field textarea,.ib-line input,.ib-quick{font:inherit;font-weight:400;padding:9px 10px;border:1px solid var(--line,#ccc);border-radius:8px;background:var(--surface);color:var(--ink);min-width:0}
+.ib-field small{font-weight:400;color:var(--muted)}
+.ib-line{display:grid;grid-template-columns:minmax(0,1fr) 62px 92px 66px 88px 34px;gap:6px;align-items:end;padding:8px 0;border-bottom:1px solid var(--line)}
+.ib-line label,.ib-amt{display:flex;flex-direction:column;gap:2px}
+.ib-line label span,.ib-amt span{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase}
+.ib-amt b{padding:9px 0}
+.ib-line input{width:100%;box-sizing:border-box}
+.ib-amt{text-align:right;align-items:flex-end}
+.ib-amt b{font-variant-numeric:tabular-nums}
+.ib-rm{border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--muted);padding:8px 4px}
+.ib-rm:hover{color:#b00}
+@media (max-width:600px){.ib-line{grid-template-columns:1fr 1fr 1fr 34px}.ib-line .ib-desc{grid-column:1/-1}.ib-line .ib-amt{grid-column:1/4}}
+.ib-quick{flex:1;min-width:180px}
+.ib-sum{margin:14px 0 0 auto;max-width:280px;border-top:1px solid var(--line,#ccc);padding-top:8px}
+.ib-sum div{display:flex;justify-content:space-between;padding:2px 0}
+.ib-sum .ib-total{font-size:20px;font-weight:700;border-top:2px solid currentColor;margin-top:4px;padding-top:6px}
+.ib-actions{flex-wrap:wrap;gap:8px}
+.ib-prev{position:sticky;top:12px}
+.ib-prev-label{font-size:12px;font-weight:600;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.ib-paper{background:#fff;color:#000;border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,.18);padding:28px 26px;aspect-ratio:210/297;overflow:hidden}
+.ib-paper .inv-doc{font-size:8.5pt}
+.ib-paper .inv-doc b{font-size:11pt}
+.inv-doc{font:11pt Arial,Helvetica,sans-serif;color:#000;line-height:1.4}
+.inv-doc .doc-top{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #000;padding-bottom:10px}
+.inv-doc .doc-to{margin-top:14px}
+.inv-doc .doc-tbl{width:100%;border-collapse:collapse;margin:16px 0}
+.inv-doc .doc-tbl th,.inv-doc .doc-tbl td{border-bottom:1px solid #bbb;padding:6px 4px;text-align:left}
+.inv-doc .doc-tbl .num{text-align:right}
+.inv-doc .doc-tot{margin-left:auto;width:55%}
+.inv-doc .doc-tot div{display:flex;justify-content:space-between;padding:3px 0}
+.inv-doc .doc-tot b{font-size:14pt}
+.inv-doc .doc-pay{border:1px solid #888;padding:10px 12px;margin-top:18px}
+@media print{
+  html,body{background:#fff!important;height:auto;padding:0!important}
+  .app,#modalRoot,#toastRoot{display:none!important}
+  #printArea{display:block}
+  #printArea .receipt{box-shadow:none;border-radius:0;width:72mm;margin:0;padding:2mm 3mm;font-size:12px}
+  #printArea .sticker.a{box-shadow:none;border-radius:0;margin:0;break-after:page;page-break-after:always}
+  #printArea .sticker.a:last-child{break-after:auto;page-break-after:auto}
+}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">The Plant Shack <small>Till</small></div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-view="till" aria-selected="true">Till</button>
+      <button role="tab" data-view="stickers" aria-selected="false">Stickers</button>
+      <button role="tab" data-view="inv" aria-selected="false">Invoices</button>
+      <button role="tab" data-view="prices" aria-selected="false">Setup</button>
+      <button role="tab" data-view="eod" aria-selected="false">End of day</button>
+      <button role="tab" data-view="rep" aria-selected="false">Reports</button>
+    </nav>
+    <div class="top-right">
+      <span class="trial">Trial version</span>
+      <select id="tillName" aria-label="Which till">
+        <option>Till 1</option><option>Till 2</option><option>Till 3</option><option>Till 4</option><option>Till 5</option>
+      </select>
+      <select id="staffName" aria-label="Who is serving"></select>
+      <span id="clock"></span>
+    </div>
+  </header>
+
+  <!-- TILL -->
+  <section class="till" id="view-till">
+    <div class="pane">
+      <div class="scanbar">
+        <label for="scan">Scan</label>
+        <input id="scan" autocomplete="off" inputmode="numeric" placeholder="Scan a sticker, or type its code and press Enter">
+      </div>
+      <div class="chips" id="chips"></div>
+      <div id="result"></div>
+      <div class="lines">
+        <table>
+          <thead><tr><th style="width:56px">Qty</th><th>Description</th><th class="num">Unit price</th><th class="num">Discount</th><th class="num">Total</th></tr></thead>
+          <tbody id="lines"></tbody>
+        </table>
+      </div>
+      <div class="totals" id="totals"></div>
+    </div>
+    <div class="pane">
+      <div class="keys-head"><span id="keysTitle">Departments</span><span id="keysHint"></span></div>
+      <div class="keys" id="keys"></div>
+    </div>
+  </section>
+
+  <!-- STICKERS -->
+  <section class="view" id="view-stickers" hidden>
+    <div class="split">
+      <div class="card">
+        <h2>Make stickers</h2>
+        <p>Pick a department and price. If that price already has a code it's reused, otherwise a new code is made and added to the price list.</p>
+        <div class="form">
+          <label>Department<select id="stCat"></select></label>
+          <label>Sticker type<select id="stType"><option value="normal">Normal</option><option value="wasnow">Was / Now</option><option value="reduced">Reduced</option><option value="special">Special</option></select></label>
+          <label id="stWasWrap" hidden>Was price ($)<input id="stWas" inputmode="decimal" placeholder="34.95"></label>
+          <label>Name (optional)<input id="stName" maxlength="24" placeholder="e.g. Lilly Pilly 200mm"></label>
+          <label>Price ($)<input id="stPrice" inputmode="decimal" placeholder="29.95"></label>
+          <label>Design<select id="stStyle"><option value="a">Big price</option><option value="b">Name band</option></select></label>
+          <label>How many stickers<input id="stQty" inputmode="numeric" value="6"></label>
+          <button class="btn" id="stMake">Make stickers</button>
+          <button class="btn sec" id="stPrint">Print stickers</button>
+          <p id="zbStatus" class="zb-status"></p>
+          <details class="zb-set">
+            <summary>Sticker printer settings</summary>
+            <label>Print using<select id="stMode"><option value="zebra">Zebra Browser Print (straight to the printer)</option><option value="window">Print window</option></select></label>
+            <label id="stPrnWrap">Sticker printer<select id="stPrn"><option value="">Browser Print's default printer</option></select></label>
+            <label id="stDarkWrap">Print darkness<select id="stDark"><option value="-20">Much lighter</option><option value="-10">Lighter</option><option value="0">Printer's own setting</option><option value="10">Darker</option></select></label>
+            <label id="stDpiWrap">Printer resolution<select id="stDpi"><option value="8">203 dpi (most Zebras)</option><option value="12">300 dpi</option></select></label>
+            <label>Print position: move right (mm)<input id="stX" inputmode="decimal"></label>
+            <label>Print position: move down (mm)<input id="stY" inputmode="decimal"></label>
+            <button class="btn sec" id="zbCheck" type="button">Check the Zebra</button>
+            <p id="stModeHelp" style="margin:0;font-size:13px;color:var(--muted)"></p>
+          </details>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Sticker sheet</h2>
+        <p id="stInfo">Matches your current sticker layout. Printing to the label printer works once this is built in Bolt.</p>
+        <div class="sheet" id="stSheet"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICES -->
+  <section class="view" id="view-prices" hidden>
+    <div class="card">
+      <h2>Departments</h2>
+      <p>The coloured department buttons on the till, in this order. Type a price then tap one to ring it up. A department can't be removed while stickers use it.</p>
+      <div class="tblwrap"><table class="tbl" id="deptTable"></table></div>
+      <div class="actions" style="margin-top:10px"><button class="btn sec" id="addDept">Add a department</button></div>
+    </div>
+    <div class="card">
+      <h2>Button groups</h2>
+      <p>Each group is a button on the till (like "Mixes &amp; mulch ›") that opens its own set of buttons. Sales from a group's buttons are reported under the group's name at end of day.</p>
+      <div class="tblwrap"><table class="tbl" id="grpTable"></table></div>
+      <div class="actions" style="margin-top:10px"><button class="btn sec" id="addGrp">Add a group</button></div>
+    </div>
+    <div class="card">
+      <h2>Buttons</h2>
+      <p>The preset buttons inside each group. Leave the price blank and the till asks for one when you tap it. Fill in "Deal qty" and "Deal price" for multi-buys, e.g. 2 for $22. Buying that many or more gives every one the deal price (3 = $33).</p>
+      <div class="tblwrap"><table class="tbl" id="btnTable"></table></div>
+      <div class="actions" style="margin-top:10px"><button class="btn sec" id="addBtn">Add a button</button></div>
+    </div>
+    <details class="card">
+      <summary style="cursor:pointer;font-weight:600;color:var(--muted)">Behind the scenes: sticker codes</summary>
+      <p style="margin:10px 0">The till keeps this list itself. Each sticker barcode stands for one department at one price. You can fix a sticker's name here; scans show the new name straight away, but stickers already printed keep the old wording.</p>
+      <div class="tblwrap"><table class="tbl" id="codeTable"></table></div>
+    </details>
+  </section>
+
+  <!-- END OF DAY -->
+  <!-- INVOICES -->
+  <section class="view" id="view-inv" hidden>
+    <div class="card">
+      <h2>Quotes &amp; invoices</h2>
+      <p>Prices include GST and invoices are due when sent. Tap a row to open it.</p>
+      <div class="actions" style="margin-bottom:10px">
+        <button class="btn" id="newQuote">New quote</button><button class="btn" id="newInv">New invoice</button>
+        <nav class="tabs" id="invFilters" style="margin-left:auto"><button data-f="open">Unpaid</button><button data-f="quotes">Quotes</button><button data-f="paid">Paid</button><button data-f="all">All</button></nav>
+      </div>
+      <div class="tblwrap"><table class="tbl" id="invTable"></table></div>
+    </div>
+    <div class="card">
+      <h2>Customers</h2>
+      <div class="tblwrap"><table class="tbl" id="custTable"></table></div>
+      <div class="actions" style="margin-top:10px"><button class="btn sec" id="addCust">Add a customer</button></div>
+    </div>
+    <details class="card">
+      <summary style="cursor:pointer;font-weight:600">Invoice details (bank, email, card link)</summary>
+      <div class="form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px">
+        <label>Email on invoices<input id="cfg-email" data-cfg="email" inputmode="email"></label>
+        <label>Account name<input id="cfg-acctName" data-cfg="acctName"></label>
+        <label>BSB<input id="cfg-bsb" data-cfg="bsb" inputmode="numeric"></label>
+        <label>Account number<input id="cfg-acct" data-cfg="acct" inputmode="numeric"></label>
+        <label>Card payment link (for now)<input id="cfg-cardLink" data-cfg="cardLink" placeholder="https://…"></label>
+      </div>
+    </details>
+  </section>
+
+  <!-- QUOTE / INVOICE BUILDER -->
+  <section class="view" id="view-invedit" hidden>
+    <div class="ib-bar">
+      <button class="btn sec" data-ib="back">‹ Back</button>
+      <h2 id="ibTitle" style="margin:0;font-family:var(--f-display);font-size:26px;text-transform:uppercase"></h2>
+      <span id="ibStatus" class="tag"></span>
+    </div>
+    <div class="ib-wrap">
+      <div class="ib-build">
+        <div class="card">
+          <div class="ib-grid">
+            <label class="ib-field">Customer<select id="ibCust"></select><small id="ibCustInfo"></small></label>
+            <label class="ib-field">Date<input type="date" id="ibDate"></label>
+          </div>
+          <div id="ibNewCust" hidden class="ib-field" style="margin-top:10px"><label class="ib-field">New customer name<input id="ibNewName" placeholder="e.g. Sue Smith, then press Enter"></label></div>
+        </div>
+        <div class="card">
+          <h2 style="font-size:18px">Items</h2>
+          <div id="ibLines"></div>
+          <div class="actions" style="margin-top:10px">
+            <button class="btn sec" data-ib="addline">+ Add a line</button>
+            <select id="ibQuick" class="ib-quick" aria-label="Add from till buttons"></select>
+          </div>
+          <div class="ib-sum" id="ibSum"></div>
+        </div>
+        <div class="card">
+          <label class="ib-field">Notes for the customer<textarea id="ibNotes" rows="2" placeholder="e.g. Delivery Thursday morning"></textarea></label>
+        </div>
+        <p id="ibPaid" class="note" style="text-align:left"></p>
+        <div class="actions ib-actions" id="ibActions"></div>
+      </div>
+      <div class="ib-prev">
+        <div class="ib-prev-label">Preview</div>
+        <div class="ib-paper" id="ibPreview"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-eod" hidden>
+    <div class="card">
+      <h2 id="eodTitle">End of day</h2>
+      <p id="eodSub"></p>
+      <div class="stats" id="eodStats"></div>
+    </div>
+    <div class="card">
+      <h2>Cash drawer</h2>
+      <p>Enter the float you started with and the cash you counted. The till works out what should be there.</p>
+      <div class="drawer form">
+        <label>Float at start ($)<input id="eodFloat" inputmode="decimal"></label>
+        <label>Cash counted ($)<input id="eodCounted" inputmode="decimal" placeholder="Count the drawer"></label>
+        <div id="eodDrawer"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>By department</h2>
+      <div class="tblwrap"><table class="tbl" id="eodCats"></table></div>
+    </div>
+    <div class="card">
+      <h2>Today's sales</h2>
+      <div class="tblwrap"><table class="tbl" id="eodSales"></table></div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn sec" id="clearExamples">Remove example sales</button>
+        <button class="btn sec" id="toReports">Past days and monthly figures</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPORTS -->
+  <section class="view" id="view-rep" hidden>
+    <div class="card">
+      <h2>Reports</h2>
+      <p id="repSub">Every sale is kept. Pick a period to see the takings.</p>
+      <nav class="tabs" id="repRange" style="margin-bottom:10px">
+        <button data-r="today">Today</button><button data-r="yesterday">Yesterday</button><button data-r="week">This week</button><button data-r="lastweek">Last week</button><button data-r="month">This month</button><button data-r="lastmonth">Last month</button><button data-r="fy">This financial year</button><button data-r="custom">Pick dates</button>
+      </nav>
+      <div class="form rep-dates" id="repDates" hidden><label>From<input type="date" id="repFrom"></label><label>To<input type="date" id="repTo"></label></div>
+      <div class="stats" id="repStats"></div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn sec" id="repCsvDays">Download daily totals (spreadsheet)</button>
+        <button class="btn sec" id="repCsvSales">Download every sale (spreadsheet)</button>
+        <button class="btn sec" id="repExample">Add 3 months of example sales to try it</button>
+        <button class="btn sec" id="repClearEx">Remove example sales</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2 id="repByTitle">By day</h2>
+      <div class="tblwrap"><table class="tbl" id="repDays"></table></div>
+    </div>
+    <div class="split rep-split">
+      <div class="card"><h2>By department</h2><div class="tblwrap"><table class="tbl" id="repCats"></table></div></div>
+      <div class="card"><h2>By till</h2><div class="tblwrap"><table class="tbl" id="repTills"></table></div></div>
+    </div>
+    <div class="card">
+      <h2>Activity log</h2>
+      <p id="repLogSum"></p>
+      <details><summary style="cursor:pointer;font-weight:600">Show every entry</summary><div class="tblwrap" style="margin-top:8px"><table class="tbl" id="repLog"></table></div></details>
+    </div>
+    <div class="card">
+      <h2>Find a sale</h2>
+      <div class="form"><label>Sale number, amount or item<input id="repFind" placeholder="e.g. 1042, 54.95 or lilly pilly"></label></div>
+      <div class="tblwrap"><table class="tbl" id="repSales"></table></div>
+    </div>
+  </section>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+<div id="printArea"></div>
+
+<script>
+(function(){
+/* ---------- money ---------- */
+const r2 = n => Math.round(n*100)/100;
+const round5 = n => Math.round(n*20)/20;
+const money = n => (n<0?'-':'')+'$'+Math.abs(n).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+function calcLine(l,pct){
+  const gross = r2(l.unit*l.qty);
+  let afterDeal = gross;
+  const dq = Number(l.dq), dp = Number(l.dp);
+  if(dq>1 && dp>0 && l.qty>=dq){ afterDeal = r2(l.qty*dp/dq); } // buy dq or more and every one gets the deal price
+  const net = r2(afterDeal*(1-pct/100));
+  return {gross, net, disc:r2(gross-net), deal: afterDeal<gross};
+}
+function totalsFor(lines,pct){
+  let total=0, disc=0, items=0;
+  lines.forEach(l=>{ const c=calcLine(l,pct); total+=c.net; disc+=c.disc; items+=l.qty; });
+  total=r2(total); disc=r2(disc);
+  return {total, disc, items, gst:r2(total/11)};
+}
+
+/* ---------- data ---------- */
+const CATS = [
+  {id:'plants',  label:'Plants',      name:'PLANTS',      sticker:'PLANT',  color:'var(--c-plants)'},
+  {id:'pots',    label:'Pots',        name:'POTS',        sticker:'POT',    color:'var(--c-pots)'},
+  {id:'care',    label:'Garden Care', name:'GARDEN CARE', sticker:'GARDEN CARE', color:'var(--c-care)'},
+  {id:'gift',    label:'Gift',        name:'GIFT',        sticker:'GIFT',   color:'var(--c-gift)'},
+  {id:'od',      label:'OD',          name:'OD',          sticker:'OD',     color:'var(--c-od)'},
+  {id:'delivery',label:'Delivery',    name:'DELIVERY',    sticker:'DELIVERY', color:'var(--c-delivery)', light:true},
+  {id:'bags',    label:'Bags',        name:'BAGS',        sticker:'BAGS',   color:'var(--c-bags)'},
+  {id:'mix',     label:'Mixes',       name:'MIXES',       sticker:'MIX',    color:'var(--c-mix)'}
+];
+const PALETTE=[['#2f8a3e','Green'],['#8a4a2a','Brown'],['#5a2a4d','Plum'],['#bf3f78','Pink'],['#5f6a62','Grey'],['#e0b52c','Yellow'],['#6b1f2c','Maroon'],['#1f5ea6','Blue'],['#0f7c80','Teal'],['#c4621d','Orange'],['#4b3aa8','Purple'],['#2a3128','Charcoal']];
+const isLight = c => c==='#e0b52c';
+const HEX={plants:'#2f8a3e',pots:'#8a4a2a',care:'#5a2a4d',gift:'#bf3f78',od:'#5f6a62',delivery:'#e0b52c',bags:'#6b1f2c'};
+function catById(id){
+  const d=(typeof S!=='undefined'&&S&&S.depts)||CATS;
+  const g=(typeof S!=='undefined'&&S&&S.groups)||[];
+  const f=d.find(c=>c.id===id); if(f) return f;
+  const gr=g.find(c=>c.id===id); if(gr) return {id, label:gr.label, name:gr.label.toUpperCase(), sticker:gr.label.toUpperCase(), color:gr.color};
+  return CATS.find(c=>c.id===id) || {id, label:id, name:String(id).toUpperCase(), sticker:String(id).toUpperCase(), color:'#5f6a62'};
+}
+const KEY = 'plantshack-till-v1';
+
+function ean8(seven){ const d=String(seven).split('').map(Number); let s=0; d.forEach((x,i)=>{ s += x*(i%2===0?3:1); }); return String(seven)+((10-s%10)%10); }
+
+function seed(){
+  const s = {
+    till:'Till 1', saleNo:1001, nextBase:2017400, float:200, counted:'',
+    codes:[], buttons:[], sale:newSale(), suspended:[], sales:[]
+  };
+  s.codes.push({code:'20173685', cat:'plants', price:29.95, example:false});
+  const ex = [['plants',13.95],['plants',14.95],['plants',26.95],['plants',31.95],['plants',34.95],['plants',54.95],['plants',115],['pots',109],['pots',129],['care',49.95]];
+  ex.forEach(([cat,price])=>{ s.codes.push({code:ean8(s.nextBase++), cat, price, example:true}); });
+  let id=1; const b=(name,price,dq,dp,src)=>({id:'b'+(id++),name,price,dq:dq||'',dp:dp||'',src});
+  s.buttons = [
+    b('30L Compost',12.95,2,22,'till photo'),
+    b('30L Platinum Potting Mix',16.95,2,28,'till photo'),
+    b('Tea Tree Mulch',14,'','','till photo'),
+    b('Flourish Flowers & Foliage 1kg',17.95,'','','till photo'),
+    b('Soil Improver',12.95,2,24,'counter sign'),
+    b('Planting Mix',12.95,2,24,'counter sign'),
+    b('Lawn Top Dressing',12.95,2,24,'counter sign'),
+    b('Mulch',16.95,2,30,'counter sign'),
+    b('30L Premium',null,'','',''), b('50L Premium',null,'','',''), b('50L Platinum',null,'','',''),
+    b('5in1',null,'','',''), b('Fertiliser',null,'','',''), b('Specialty Mixes',null,'','','')
+  ];
+  // example sale in progress + example finished sales
+  const c = code => s.codes.find(x=>x.code===code);
+  const p29 = c('20173685'), p14 = s.codes.find(x=>x.price===14.95);
+  s.sale.lines = [
+    lineFromCode(p29,2), lineFromButton(s.buttons[0],4), lineFromCode(p14,3)
+  ];
+  s.sale.example = true;
+  const today = new Date();
+  const mk = (h,m,lines,method,pct) => {
+    const t = new Date(today); t.setHours(h,m,0,0);
+    const tot = totalsFor(lines,pct||0);
+    const cashDue = method==='Cash'? round5(tot.total): tot.total;
+    return {no:s.saleNo++, time:t.toISOString(), till:'Till 1', lines:lines.map(l=>({...l})), pct:pct||0, total:tot.total, disc:tot.disc, method, cashDue, tendered: method==='Cash'? Math.ceil(cashDue/10)*10 : tot.total, example:true};
+  };
+  s.sales.push(mk(8,42,[lineFromCode(p29,1)],'Cash'));
+  s.sales.push(mk(9,15,[lineFromCode(s.codes.find(x=>x.price===54.95),2), lineFromCode(s.codes.find(x=>x.price===109),1)],'EFTPOS',15));
+  s.sales.push(mk(9,51,[lineFromButton(s.buttons[1],2), lineFromCode(p14,4)],'EFTPOS'));
+  s.sales.forEach(x=>{ x.change = x.method==='Cash'? r2(x.tendered-x.cashDue):0; });
+  return s;
+}
+function newSale(){ return {lines:[], pct:0, tendered:0, example:false}; }
+function lineFromCode(c,qty){ const cat=catById(c.cat); return {key:'code:'+c.code, name:c.name||cat.name, dl:cat.label, cat:c.cat, unit:c.price, qty:qty||1, code:c.code, dq:'', dp:''}; }
+function lineFromButton(b,qty,price){ return {key:'btn:'+b.id+':'+(price??b.price), name:b.name, dl:(((typeof S!=='undefined'&&S&&S.groups)||[]).find(g=>g.id===b.group)||{label:'Mixes & mulch'}).label, cat:b.group||'mix', unit:price??b.price, qty:qty||1, dq:b.dq, dp:b.dp}; }
+
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)||'null'); } catch(e){ S=null; }
+if(!S || !S.codes) S = seed();
+// departments, button groups and the group each button sits in are editable on the Setup tab
+if(!S.depts) S.depts = CATS.filter(c=>c.id!=='mix').map(c=>({id:c.id,label:c.label,name:c.name,sticker:c.sticker,color:HEX[c.id]}));
+if(!S.groups) S.groups = [{id:'mix',label:'Mixes & mulch',color:'#1f5ea6'}];
+S.buttons.forEach(b=>{ if(!b.group) b.group='mix'; });
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ---------- ui state ---------- */
+let view='till', keyMode='main', selected=-1, pendingQty=0, entry='', lastResult=null, armed=null, armTimer=null;
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function toast(msg,err){
+  const r=$('#toastRoot'); r.innerHTML=`<div class="toast${err?' err':''}" role="status">${esc(msg)}</div>`;
+  clearTimeout(toast.t); toast.t=setTimeout(()=>{r.innerHTML='';},2600);
+}
+function arm(id){ // two-tap confirm
+  if(armed===id){ armed=null; clearTimeout(armTimer); return true; }
+  armed=id; clearTimeout(armTimer); armTimer=setTimeout(()=>{armed=null; renderAll();},3000); renderAll(); return false;
+}
+
+/* ---------- sale actions ---------- */
+function clearExampleSale(){ if(S.sale.example){ S.sale=newSale(); } }
+function addLine(line){
+  clearExampleSale();
+  lastResult=null;
+  const qty = pendingQty||line.qty||1; pendingQty=0;
+  const i = S.sale.lines.findIndex(l=>l.key===line.key);
+  if(i>=0 && !line.key.startsWith('open:')){ S.sale.lines[i].qty += qty; if(!S.sale.lines[i].qty) S.sale.lines.splice(i,1); selected=-1; }
+  else { S.sale.lines.push({...line, qty}); selected=-1; }
+  save(); renderAll();
+}
+function scan(code){
+  code=code.trim(); if(!code) return;
+  const c=S.codes.find(x=>x.code===code);
+  if(!c){ toast(`Code ${code} isn't in the price list. Add it on the Stickers tab.`,true); return; }
+  addLine(lineFromCode(c,1));
+}
+function takeEntry(){
+  if(entry){ const v=entry; entry=''; return v; }
+  const sv=$('#scan').value.trim();
+  if(/^-?\d{1,5}(\.\d{1,2})?$/.test(sv)){ $('#scan').value=''; return sv; }
+  return '';
+}
+function deptTap(cat){
+  const v=takeEntry();
+  if(v){ const p=r2(parseFloat(v)); if(!(p>0)){ renderAll(); return; } addLine({key:'open:'+cat.id+':'+Date.now(), name:cat.name, dl:cat.label, cat:cat.id, unit:p, qty:1, dq:'', dp:''}); return; }
+  if(cat.id==='od' && !S.sale.lines.length && !pendingQty){
+    (S.drawerOpens=S.drawerOpens||[]).push({time:new Date().toISOString(), till:S.till, staff:S.staff||''});
+    logEvent('Drawer opened','No sale');
+    save(); toast('Cash drawer opened (no sale)'); return;
+  }
+  openPrice(cat);
+}
+function calcPress(k){
+  if(k==='clr'){ entry=''; pendingQty=0; }
+  else if(k==='bk') entry=entry.slice(0,-1);
+  else if(k==='-'){ entry = entry.startsWith('-')? entry.slice(1) : '-'+entry; }
+  else if(k==='.'){ if(!entry.includes('.')) entry=(entry||'0')+'.'; }
+  else if(k==='x'){
+    const q=parseInt(takeEntry(),10);
+    if(!q){ act('qty'); return; }
+    if(selected>=0){ S.sale.lines[selected].qty=q; selected=-1; save(); } else pendingQty=q;
+  }
+  else { if(/\.\d\d$/.test(entry) || entry.length>=8) return; entry=(entry==='0'?'':entry==='-0'?'-':entry)+k; }
+  renderAll();
+}
+function openPrice(cat){
+  keypad({title:cat.label, sub:pendingQty?`Price each, for ${pendingQty} items`:'Price for this item', money:true, onOk:v=>{
+    const p=r2(parseFloat(v)); if(!(p>0)) return;
+    addLine({key:'open:'+cat.id+':'+Date.now(), name:cat.name, dl:cat.label, cat:cat.id, unit:p, qty:1, dq:'', dp:''});
+  }});
+}
+function tapButton(b){
+  const v=takeEntry(); const typed=r2(parseFloat(v));
+  if(typed>0){ if(b.price!=null&&b.price!==''&&Math.abs(typed-Number(b.price))>0.001) logEvent('Price changed at till',`${b.name}: ${money(Number(b.price))} → ${money(typed)}`); addLine(lineFromButton(b,1,typed)); return; }
+  if(b.price==null || b.price===''){
+    keypad({title:b.name, sub:'No set price yet. Enter the price.', money:true, onOk:v=>{
+      const p=r2(parseFloat(v)); if(!(p>0)) return; addLine(lineFromButton(b,1,p));
+    }}); return;
+  }
+  addLine(lineFromButton(b,1));
+}
+// checks before a sale is recorded: a refund needs a reason, a tax invoice of $1,000 or more needs the customer's name or ABN
+function finish(method,extra){
+  extra=extra||{};
+  if(!S.sale.lines.length){ toast('Nothing in the sale yet',true); return; }
+  const tt=totalsFor(S.sale.lines,S.sale.pct).total;
+  if(tt<0 && !extra.refund){ askRefund(tt,method,r=>finish(method,{...extra,refund:r})); return; }
+  if(tt>=1000 && extra.buyer===undefined && method!=='Account'){ askBuyer(tt,b=>finish(method,{...extra,buyer:b})); return; }
+  finishNow(method,extra);
+}
+function askRefund(total,method,done){
+  const reasons=['Faulty or died','Changed mind','Wrong item','Price fix','Other'];
+  modal(`<h2>Refund ${money(-total)}</h2><p>Refunds are recorded with a reason. Money goes back by ${esc(method==='Cash'?'cash':method)}.</p>
+    <div class="chiprow" id="rfR">${reasons.map(x=>`<button data-rr="${x}">${x}</button>`).join('')}</div>
+    <div class="form"><label>Note (optional)<input id="rfNote" maxlength="60" placeholder="e.g. Lilly Pilly died within a week"></label></div>
+    <div class="row-btns"><button data-x>Cancel</button><button class="ok" id="rfOk" disabled>Record refund</button></div>`);
+  let pick=''; $('[data-x]').onclick=closeModal;
+  document.querySelectorAll('[data-rr]').forEach(b=>b.onclick=()=>{ pick=b.dataset.rr; document.querySelectorAll('[data-rr]').forEach(x=>x.classList.toggle('on',x===b)); $('#rfOk').disabled=false; });
+  $('#rfOk').onclick=()=>{ if(!pick) return; const r={reason:pick, note:$('#rfNote').value.trim()}; closeModal(); done(r); };
+}
+function askBuyer(total,done){
+  modal(`<h2>Customer details</h2><p>A tax invoice for ${money(total)} needs the customer's name or ABN if they want to claim the GST.</p>
+    <div class="form"><label>Customer or business name<input id="byName" maxlength="60"></label><label>ABN (if a business)<input id="byAbn" maxlength="14" inputmode="numeric"></label></div>
+    <div class="row-btns"><button data-skip>They don't need it</button><button class="ok" id="byOk">Add to receipt</button></div>`);
+  $('#byName').focus();
+  $('[data-skip]').onclick=()=>{ closeModal(); done(null); };
+  $('#byOk').onclick=()=>{ const n=$('#byName').value.trim(), a=$('#byAbn').value.trim(); if(!n&&!a){ toast('Type a name or ABN, or tap They don’t need it',true); return; } closeModal(); done({name:n,abn:a}); };
+}
+function finishNow(method,extra){
+  const t=totalsFor(S.sale.lines,S.sale.pct);
+  const cashDue = method==='Cash'? round5(t.total): t.total;
+  const tendered = method==='Cash'? S.sale.tendered : t.total;
+  const rec = {no:S.saleNo++, time:new Date().toISOString(), till:S.till, lines:S.sale.lines.map(l=>({...l})), pct:S.sale.pct, total:t.total, disc:t.disc, method, cashDue, tendered, change: method==='Cash'? r2(tendered-cashDue):0, staff:S.staff||'', example:false};
+  if(extra.refund) rec.refund=extra.refund;
+  if(extra.buyer) rec.buyer=extra.buyer;
+  S.sales.push(rec);
+  if(rec.refund) logEvent('Refund',`Sale ${rec.no} · ${rec.refund.reason}${rec.refund.note?' · '+rec.refund.note:''} · ${method}`,rec.total);
+  lastResult = rec;
+  S.sale=newSale(); selected=-1; pendingQty=0; entry=''; keyMode='main';
+  save(); renderAll();
+}
+function cash(amount){
+  if(!S.sale.lines.length){ toast('Nothing in the sale yet',true); return; }
+  const due = round5(totalsFor(S.sale.lines,S.sale.pct).total);
+  if(due<=0){ S.sale.tendered=due; finish('Cash'); return; } // money going back to the customer
+  S.sale.tendered = r2(S.sale.tendered+amount);
+  if(S.sale.tendered>=due-0.001) finish('Cash'); else { save(); renderAll(); }
+}
+
+/* ---------- keypad modal ---------- */
+function modal(html,cls){
+  $('#modalRoot').innerHTML=`<div class="overlay" id="ov"><div class="modal ${cls||''}" role="dialog" aria-modal="true">${html}</div></div>`;
+  $('#ov').addEventListener('click',e=>{ if(e.target.id==='ov') closeModal(); });
+}
+function closeModal(){ $('#modalRoot').innerHTML=''; document.removeEventListener('keydown',padKeys); focusScan(); }
+let padState=null;
+function padKeys(e){
+  if(!padState) return;
+  if(/^[0-9]$/.test(e.key)) padPress(e.key);
+  else if(e.key==='.'||e.key===',') padPress('.');
+  else if(e.key==='Backspace') padPress('del');
+  else if(e.key==='Enter') padPress('ok');
+  else if(e.key==='Escape') closeModal();
+  else return;
+  e.preventDefault();
+}
+function padPress(k){
+  const st=padState; if(!st) return;
+  if(k==='ok'){ const v=st.value; const cb=st.onOk; padState=null; closeModal(); if(v!=='') cb(v); return; }
+  if(k==='del') st.value=st.value.slice(0,-1);
+  else if(k==='.'){ if(st.money && !st.value.includes('.')) st.value=(st.value||'0')+'.'; }
+  else { if(st.money && /\.\d\d$/.test(st.value)) return; if(st.value.length<9) st.value=(st.value==='0'?'':st.value)+k; }
+  $('#padDisplay').textContent = st.value===''? (st.money?'$0.00':'0') : (st.money?'$':'')+st.value+(st.suffix||'');
+}
+function keypad({title,sub,money:isMoney,suffix,chips,onOk}){
+  padState={value:'',money:isMoney,suffix,onOk};
+  modal(`<h2>${esc(title)}</h2>${sub?`<p>${esc(sub)}</p>`:''}
+    <div class="display" id="padDisplay">${isMoney?'$0.00':'0'}</div>
+    ${chips?`<div class="chiprow">${chips.map(c=>`<button data-chip="${esc(c.v)}">${esc(c.label)}</button>`).join('')}</div>`:''}
+    <div class="pad">${['7','8','9','4','5','6','1','2','3',isMoney?'.':'','0','del'].map(k=>k?`<button data-k="${k}" aria-label="${k==='del'?'Delete':k}">${k==='del'?'⌫':k}</button>`:'<span></span>').join('')}</div>
+    <div class="row-btns"><button data-k="cancel">Cancel</button><button class="ok" data-k="ok">OK</button></div>`);
+  $('#ov').addEventListener('click',e=>{
+    const k=e.target.closest('[data-k]'); const c=e.target.closest('[data-chip]');
+    if(c){ const cb=padState.onOk; padState=null; closeModal(); cb(c.dataset.chip); return; }
+    if(!k) return; if(k.dataset.k==='cancel'){ padState=null; closeModal(); return; } padPress(k.dataset.k);
+  });
+  document.addEventListener('keydown',padKeys);
+}
+
+/* ---------- receipt ---------- */
+function receiptHtml(r){
+  const d=new Date(r.time);
+  const lines=r.lines.map(l=>{ const c=calcLine(l,r.pct); return `<div>${esc(l.name)}</div><div class="r"><span>&nbsp;${l.qty} @ ${money(l.unit)}</span><span>${money(c.gross)}</span></div>${c.disc>0?`<div class="r"><span>&nbsp;${c.deal?'Multi-buy':''}${c.deal&&r.pct?' + ':''}${r.pct?r.pct+'% off':''}</span><span>-${money(c.disc)}</span></div>`:''}`; }).join('');
+  return `<div class="receipt">
+    <div class="c"><b>THE PLANT SHACK</b><br>2 Krause St, Deception Bay QLD<br>ABN 20 651 371 470<br><b>TAX INVOICE</b></div><hr>
+    <div class="r"><span>${d.toLocaleDateString('en-AU')} ${d.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'})}</span><span>${esc(r.till)}</span></div>
+    <div class="r"><span>Sale no. ${r.no}</span><span>${r.staff?'Served by '+esc(r.staff):''}</span></div>${r.refund?`<div class="c"><b>REFUND</b> · ${esc(r.refund.reason)}</div>`:''}${r.buyer?`<div>Customer: ${esc(r.buyer.name||'')}${r.buyer.abn?' · ABN '+esc(r.buyer.abn):''}</div>`:''}<hr>${lines}<hr>
+    ${r.disc>0?`<div class="r"><span>You saved</span><span>${money(r.disc)}</span></div>`:''}
+    <div class="r"><b>TOTAL</b><b>${money(r.total)}</b></div>
+    ${r.method==='Cash'&&r.cashDue!==r.total?`<div class="r"><span>Cash rounding</span><span>${money(r2(r.cashDue-r.total))}</span></div>`:''}
+    <div class="r"><span>GST included</span><span>${money(r2(r.total/11))}</span></div><hr>
+    ${r.method==='Account'?`<div class="r"><span>Invoiced, to pay${r.inv?' · '+esc(r.inv):''}</span><span>${money(r.total)}</span></div>`:r.total<0?`<div class="r"><span>Refunded ${esc(r.method)}</span><span>${money(-(r.method==='Cash'?r.cashDue:r.total))}</span></div>`:`<div class="r"><span>Paid ${esc(r.method)}</span><span>${money(r.tendered)}</span></div>`}
+    ${r.method==='Cash'&&r.total>=0?`<div class="r"><span>Change</span><span>${money(r.change)}</span></div>`:''}
+    <hr><div class="c">Thanks for shopping local!</div></div>`;
+}
+function showReceipt(r){
+  if(!r){ toast('No finished sale to show yet',true); return; }
+  modal(`<h2>Receipt · Sale ${r.no}</h2>${receiptHtml(r)}<p class="note">With the till set up for instant printing, Print sends this straight to the receipt printer.</p><div class="row-btns"><button data-pr>Print</button><button class="ok" data-x>Done</button></div>`,'wide');
+  $('[data-x]').onclick=closeModal;
+  $('[data-pr]').onclick=()=>printReceipt(r);
+}
+function printReceipt(r){
+  let st=$('#printPos'); if(!st){ st=document.createElement('style'); st.id='printPos'; document.head.appendChild(st); }
+  st.textContent='@page{size:80mm 200mm;margin:0}';
+  $('#printArea').innerHTML=receiptHtml(r);
+  try{ window.print(); }catch(e){ toast('This page could not open the print window',true); }
+}
+
+/* ---------- render: till ---------- */
+function renderLines(){
+  const pct=S.sale.pct;
+  const tb=$('#lines');
+  if(!S.sale.lines.length){ tb.innerHTML=`<tr><td colspan="5" class="empty">Scan a sticker or tap a department to start a sale.</td></tr>`; return; }
+  tb.innerHTML=S.sale.lines.map((l,i)=>{
+    const c=calcLine(l,pct);
+    const dealTxt = (Number(l.dq)>1&&Number(l.dp)>0)? `${l.dq} or more: ${money(r2(Number(l.dp)/Number(l.dq)))} each` : '';
+    const sub=[l.code?`Code ${l.code}`:'', dealTxt, S.sale.example&&i===0?'Example sale':''].filter(Boolean).join(' · ');
+    return `<tr class="row${i===selected?' sel':''}" data-i="${i}"><td>${l.qty}</td><td class="desc">${esc(l.name)}${sub?`<small>${esc(sub)}</small>`:''}</td><td class="num">${money(l.unit)}</td><td class="num">${c.disc?'-'+money(c.disc):'—'}</td><td class="num"><b>${money(c.net)}</b></td></tr>`;
+  }).join('');
+}
+function renderChips(){
+  const ch=[];
+  if(pendingQty) ch.push(`<span class="chip">Next item × ${pendingQty}</span>`);
+  if(S.sale.pct) ch.push(`<span class="chip">${S.sale.pct}% off whole sale</span>`);
+  if(S.sale.tendered){ const due=round5(totalsFor(S.sale.lines,S.sale.pct).total); ch.push(`<span class="chip warn">Cash handed over ${money(S.sale.tendered)} · still owing ${money(r2(due-S.sale.tendered))}</span>`); }
+  if(selected>=0) ch.push(`<span class="chip">Line selected · type a number and press Enter to change it, or Delete item</span>`);
+  if(S.suspended.length) ch.push(`<span class="chip">${S.suspended.length} suspended sale${S.suspended.length>1?'s':''}</span>`);
+  $('#chips').innerHTML=ch.join('');
+  $('#chips').hidden=!ch.length;
+  $('#result').innerHTML = lastResult? `<div class="result"><span>Sale ${lastResult.no} · ${esc(lastResult.method)}</span>${lastResult.method==='Cash'?(lastResult.total<0?`<span>Give back</span><b>${money(-lastResult.cashDue)}</b>`:`<span>Change</span><b>${money(lastResult.change)}</b>`):`<b>${money(lastResult.total)}</b><span>Key this into the EFTPOS terminal</span>`}</div>`:'';
+}
+function renderTotals(){
+  const t=totalsFor(S.sale.lines,S.sale.pct);
+  const cashDue=round5(t.total);
+  $('#totals').innerHTML=`<div><span>Items</span><b>${t.items}</b></div><div><span>Discount</span><b>${money(t.disc)}</b></div><div><span>GST incl.</span><b>${money(t.gst)}</b></div><div><span>Total${cashDue!==t.total&&t.total?` · cash ${money(cashDue)}`:''}</span><b>${money(t.total)}</b></div>`;
+}
+function key(label,action,opts={}){
+  const st = opts.color?`style="background:${opts.color}"`:'';
+  return `<button class="key ${opts.cls||''}${opts.light?' light':''}" ${st} data-a="${esc(action)}">${label}${opts.sub?`<small>${opts.sub}</small>`:''}</button>`;
+}
+function renderCalc(){
+  const has=pendingQty||entry;
+  const txt=has?`${pendingQty?pendingQty+' × ':''}${entry}`:'0';
+  const hint=!has?'Type qty, press Enter, type the price, then tap a department'
+    : entry&&!pendingQty?'Tap a department to add it, or press Enter if this is a quantity'
+    : pendingQty&&!entry?'Now type the price each, then tap a department (or scan)'
+    : 'Tap a department to add it';
+  return `<div class="calcdisp${has?' on':''}" aria-live="polite"><small>${hint}</small>${txt}</div>`;
+}
+function renderKeys(){
+  const k=$('#keys');
+  const grp = keyMode.startsWith('grp:') && S.groups.find(g=>g.id===keyMode.slice(4));
+  if(grp){
+    $('#keysTitle').textContent=grp.label; $('#keysHint').textContent=pendingQty?`Qty ${pendingQty} ready`:'';
+    k.innerHTML = key('‹ Back','back',{cls:'ghost'}) + S.buttons.filter(b=>b.group===grp.id).map(b=>{
+      const deal=(Number(b.dq)>1&&Number(b.dp)>0)?` · ${b.dq}+ ${money(r2(Number(b.dp)/Number(b.dq)))} ea`:'';
+      const price = (b.price==null||b.price==='')?'Enter price':money(Number(b.price));
+      return key(esc(b.name),'btn:'+b.id,{color:grp.color,light:isLight(grp.color),sub:price+deal});
+    }).join('');
+    return;
+  }
+  $('#keysTitle').textContent='Departments';
+  $('#keysHint').textContent=pendingQty?`Qty ${pendingQty} ready`:'';
+  const dept = c=>key(esc(c.label),'cat:'+c.id,{color:c.color,light:isLight(c.color),sub:c.id==='od'?'open drawer':''});
+  const n = d=>key(d,'n:'+d,{cls:'num'});
+  k.innerHTML = [
+    ...S.depts.map(dept),
+    ...S.groups.map(g=>key(esc(g.label)+' ›','grp:'+g.id,{color:g.color,light:isLight(g.color)})),
+    '<div class="sect">Calculator</div>', renderCalc(),
+    n('7'), n('8'), n('9'), key('Enter','n:x',{cls:'ghost',sub:'sets qty'}),
+    n('4'), n('5'), n('6'), key('C','n:clr',{cls:'ghost',sub:'clear'}),
+    n('1'), n('2'), n('3'), key('⌫','n:bk',{cls:'ghost'}),
+    n('0'), n('.'), key('−','n:-',{cls:'num',sub:'take off'}), key('Cash given','othercash',{cls:'cash',sub:'typed amount'}),
+    '<div class="sect">Sale</div>',
+    key('Discount','disc',{cls:'ghost',sub:S.sale.pct?S.sale.pct+'% on':''}), key('Suspend sale','suspend',{cls:'ghost',sub:S.suspended.length?S.suspended.length+' waiting':''}), key('Delete item','del',{cls:'ghost'}), key(armed==='cancel'?'Tap again':'Cancel sale','cancel',{cls:armed==='cancel'?'armed':'danger'}),
+    key('Previous sales','prev',{cls:'ghost span2'}), key('Receipt','receipt',{cls:'ghost span2',sub:'last sale'}),
+    '<div class="sect">Pay</div>',
+    key('$5','cash:5',{cls:'cash'}), key('$10','cash:10',{cls:'cash'}), key('$20','cash:20',{cls:'cash'}), key('$50','cash:50',{cls:'cash'}),
+    key('$100','cash:100',{cls:'cash'}), key('Exact cash','exact',{cls:'cash',sub:'no change'}), key('Invoice','account',{cls:'ghost',sub:'pay later'}), key('EFTPOS','eftpos',{color:'var(--c-eftpos)'})
+  ].join('');
+}
+function act(a){
+  if(a.startsWith('n:')){ calcPress(a.slice(2)); return; }
+  if(a.startsWith('cat:')){ deptTap(catById(a.slice(4))); return; }
+  if(a.startsWith('grp:')){ keyMode=a; renderKeys(); return; }
+  if(a.startsWith('btn:')){ const b=S.buttons.find(x=>x.id===a.slice(4)); if(b) tapButton(b); return; }
+  if(a.startsWith('cash:')){ cash(Number(a.slice(5))); return; }
+  switch(a){
+    case 'back': keyMode='main'; renderKeys(); break;
+    case 'qty':
+      keypad({title:'Quantity', sub: selected>=0?`Change quantity for ${S.sale.lines[selected].name}`:'Quantity for the next item you scan or tap', onOk:v=>{
+        const q=parseInt(v,10); if(!(q>0)) return;
+        if(selected>=0){ S.sale.lines[selected].qty=q; selected=-1; } else pendingQty=q;
+        save(); renderAll();
+      }}); break;
+    case 'disc':
+      if(!S.sale.lines.length){ toast('Add items before a discount',true); return; }
+      keypad({title:'Discount', sub:'Percent off the whole sale', suffix:'%', chips:[{v:'5',label:'5%'},{v:'10',label:'10%'},{v:'15',label:'15%'},{v:'20',label:'20%'},{v:'0',label:'None'}], onOk:v=>{
+        const p=Math.min(100,Math.max(0,parseFloat(v)||0)); if(p!==S.sale.pct) logEvent('Discount',p?`${p}% off the whole sale`:'Discount removed'); S.sale.pct=p; clearExampleFlag(); save(); renderAll();
+      }}); break;
+    case 'del':
+      if(selected<0){ toast('Tap a line first, then Delete item',true); return; }
+      { const l=S.sale.lines[selected]; logEvent('Item deleted',`${l.qty} × ${l.name}`,r2(l.qty*l.unit)); }
+      S.sale.lines.splice(selected,1); selected=-1; save(); renderAll(); break;
+    case 'cancel':
+      if(!S.sale.lines.length){ return; }
+      if(arm('cancel')){ const tc=totalsFor(S.sale.lines,S.sale.pct); logEvent('Sale cancelled',S.sale.lines.map(l=>`${l.qty} × ${l.name}`).join(', '),tc.total); S.sale=newSale(); selected=-1; pendingQty=0; save(); renderAll(); toast('Sale cancelled'); } break;
+    case 'suspend': suspendMenu(); break;
+    case 'prev': prevSales(); break;
+    case 'receipt': showReceipt(S.sales[S.sales.length-1]); break;
+    case 'exact': {
+      if(!S.sale.lines.length){ toast('Nothing in the sale yet',true); return; }
+      S.sale.tendered=round5(totalsFor(S.sale.lines,S.sale.pct).total); finish('Cash'); break; }
+    case 'othercash':
+      if(!S.sale.lines.length){ toast('Nothing in the sale yet',true); return; }
+      { const v=takeEntry(); if(v){ const n=r2(parseFloat(v)); if(n>0) cash(n); else renderAll(); break; } }
+      keypad({title:'Cash handed over', money:true, onOk:v=>{ const n=r2(parseFloat(v)); if(n>0) cash(n); }}); break;
+    case 'eftpos': finish('EFTPOS'); break;
+    case 'account': onAccount(); break;
+  }
+}
+function clearExampleFlag(){ S.sale.example=false; }
+function suspendMenu(){
+  const list=S.suspended.map((s,i)=>{ const t=totalsFor(s.lines,s.pct); return `<button data-r="${i}"><span>${s.label?`<b>${esc(s.label)}</b> · `:''}${new Date(s.at).toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'})}${s.till?' · '+esc(s.till):''} · ${t.items} items</span><b>${money(t.total)}</b></button>`; }).join('');
+  modal(`<h2>Suspend sale</h2><p>Park this sale to serve someone else, then bring it back.</p>
+    ${S.sale.lines.length?`<div class="form"><label>Name or note (optional)<input id="parkLabel" maxlength="30" placeholder="e.g. Sue, green ute, lady in hat" value="${esc(S.sale.label||'')}"></label></div>`:''}
+    <div class="row-btns"><button class="ok" data-s>${S.sale.lines.length?'Park the current sale':'Nothing to park'}</button></div>
+    ${S.suspended.length?`<h2 style="font-size:18px">Waiting</h2><div class="list">${list}</div><p>Bringing one back parks the current sale if it has items.</p>`:''}
+    <div class="row-btns"><button data-x>Close</button></div>`);
+  $('[data-x]').onclick=closeModal;
+  const lab=$('#parkLabel'); if(lab){ lab.focus(); lab.addEventListener('keydown',e=>{ if(e.key==='Enter') $('[data-s]').click(); }); }
+  $('[data-s]').onclick=()=>{ if(!S.sale.lines.length) return; S.suspended.push({...S.sale, label:(lab?lab.value.trim():''), at:new Date().toISOString(), till:S.till, example:false}); S.sale=newSale(); selected=-1; save(); closeModal(); renderAll(); toast('Sale parked'); };
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{
+    const s=S.suspended.splice(Number(b.dataset.r),1)[0];
+    if(S.sale.lines.length) S.suspended.push({...S.sale, at:new Date().toISOString(), till:S.till, example:false});
+    S.sale={lines:s.lines,pct:s.pct,tendered:s.tendered||0,label:s.label||'',example:false}; selected=-1; save(); closeModal(); renderAll();
+  });
+}
+function prevSales(){
+  modal(`<h2>Previous sales</h2><div class="form" style="display:flex;gap:10px;flex-wrap:wrap"><label>Day<input type="date" id="psDate" value="${isoDay(new Date())}" max="${isoDay(new Date())}"></label><label style="flex:1">Search<input id="psFind" placeholder="Sale number, amount or item"></label></div><div class="list" id="psList"></div><div class="row-btns"><button data-x>Close</button></div>`,'wide');
+  $('[data-x]').onclick=closeModal;
+  const draw=()=>{ const d=$('#psDate').value, q=$('#psFind').value;
+    const rs=findSales(S.sales.filter(r=>isoDay(r.time)===d),q).reverse();
+    $('#psList').innerHTML=rs.map(r=>`<button data-p="${r.no}"><span>${new Date(r.time).toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'})} · Sale ${r.no} · ${esc(r.till||'')} · ${esc(r.method)}${r.example?' · example':''}</span><b>${money(r.total)}</b></button>`).join('')||'<p>No sales on this day.</p>';
+    document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>showReceipt(S.sales.find(r=>String(r.no)===b.dataset.p))); };
+  $('#psDate').addEventListener('change',draw); $('#psFind').addEventListener('input',draw); draw();
+}
+
+/* ---------- barcode + stickers ---------- */
+const L=['0001101','0011001','0010011','0111101','0100011','0110001','0101111','0111011','0110111','0001011'];
+const R=L.map(s=>s.replace(/./g,c=>c==='1'?'0':'1'));
+function ean8Svg(code,wide){
+  const d=code.split('').map(Number);
+  const bits='101'+d.slice(0,4).map(x=>L[x]).join('')+'01010'+d.slice(4).map(x=>R[x]).join('')+'101';
+  const m=2, w=bits.length*m; let rects='';
+  for(let i=0;i<bits.length;i++){ if(bits[i]==='1'){ const guard=i<3||(i>=31&&i<36)||i>=64; rects+=`<rect x="${i*m}" y="0" width="${m}" height="${wide?(guard?27:24):(guard?52:46)}" fill="#111"/>`; } }
+  if(wide) return `<svg viewBox="0 0 ${w} 32" role="img" aria-label="Barcode ${code}">${rects}<text x="0" y="31.5" font-size="6.5" font-family="Arial" fill="#111">${code}</text></svg>`;
+  return `<svg width="${w}" height="64" viewBox="0 0 ${w} 64" role="img" aria-label="Barcode ${code}">${rects}<text x="0" y="62" font-size="11" font-family="Arial" fill="#111">${code}</text></svg>`;
+}
+let stickerOpts={type:'normal',was:0};
+const STYLES={a:'Big price',b:'Name band'};
+function stickerHtml(c,style){
+  const cat=catById(c.cat); const now=new Date();
+  const label=`${cat.sticker} ${money(c.price)}`;
+  const date=`${now.getDate()}/${now.getMonth()+1}`;
+  style=style||S.stickerStyle||'a'; if(!STYLES[style]) style='a';
+  if(style==='b' && stickerOpts.type!=='normal') style='a'; // sale stickers always use the big-price layout
+  if(style==='a'){
+    const o=stickerOpts, top = o.type==='reduced'?'<div class="band2">REDUCED</div>'
+      : o.type==='special'?'<div class="band2">SPECIAL</div>'
+      : o.type==='wasnow'&&o.was>0?`<div class="was"><span>WAS <s>${money(o.was)}</s></span><span>NOW</span></div>`
+      : '<div class="hd">THE PLANT SHACK</div>';
+    return `<div class="sticker a" title="40 × 27mm">${top}<div class="pr">${money(c.price)}</div><div class="mt"><span>${esc(c.name||cat.name)}</span><span>${date}</span></div>${ean8Svg(c.code,true)}</div>`;
+  }
+  if(style==='b') return `<div class="sticker a" title="40 × 27mm"><div class="band2">${esc((c.name||cat.name).toUpperCase())}</div><div class="pr">${money(c.price)}</div><div class="mt"><span>THE PLANT SHACK</span><span>${date}</span></div>${ean8Svg(c.code,true)}</div>`;
+  return `<div class="sticker"><div class="t1">${esc(label)}</div><div class="t2">THE PLANT SHACK</div><div class="t2">SC: ${esc(label)}</div>${ean8Svg(c.code)}<div class="bot"><span>${now.getDate()}/${now.getMonth()+1}</span><b>${money(c.price)}</b></div></div>`;
+}
+function previewStickers(){ // live preview as the form changes; doesn't create a code
+  const cat=$('#stCat').value; const price=r2(parseFloat($('#stPrice').value)); const qty=Math.min(6,Math.max(1,parseInt($('#stQty').value,10)||1));
+  const name=$('#stName').value.trim();
+  stickerOpts={type:$('#stType').value, was:r2(parseFloat($('#stWas').value))||0};
+  if(!(price>0)){ $('#stInfo').textContent='Enter a price to see the sticker.'; return; }
+  if(stickerOpts.type==='wasnow' && !(stickerOpts.was>price)){ $('#stInfo').textContent='Enter a "was" price higher than the new price.'; return; }
+  let c=S.codes.find(x=>x.cat===cat&&Math.abs(x.price-price)<0.001&&(x.name||'').toLowerCase()===name.toLowerCase());
+  if(!c){ let n=S.nextBase, code; do{ code=ean8(n++); }while(S.codes.some(x=>x.code===code)); c={code,cat,price,name}; }
+  $('#stSheet').innerHTML=Array.from({length:qty},()=>stickerHtml(c)).join('');
+  $('#stInfo').textContent='Preview. Tap Print stickers when it looks right.';
+}
+/* Zebra Browser Print: stickers go straight to the label printer as ZPL.
+   Browser Print is Zebra's free Windows app; it listens on this computer at port 9100 (9101 for https pages). */
+function zplSafe(s){ return String(s).replace(/[\^~\\]/g,' '); }
+function stickerZpl(c,qty){
+  const k=(Number(S.zebraDpmm)||8)/8, d=v=>Math.round(v*k), dpmm=Number(S.zebraDpmm)||8;
+  const W=d(320), H=d(216), now=new Date(), date=`${now.getDate()}/${now.getMonth()+1}`;
+  const cat=catById(c.cat), o=stickerOpts;
+  let style=S.stickerStyle==='b'?'b':'a'; if(style==='b' && o.type!=='normal') style='a';
+  const centre=(y,h,w,txt,rev)=>`^FO0,${d(y)}^A0N,${d(h)},${d(w)}^FB${W},1,0,C${rev?'^FR':''}^FD${zplSafe(txt)}^FS`;
+  const band=txt=>`^FO0,0^GB${W},${d(36)},${d(36)}^FS`+centre(9,24,24,txt,true);
+  const dark=S.zebraDark==null?-10:Number(S.zebraDark)||0;
+  let z=`^XA^CI28^MD${dark}^PW${W}^LL${H}^LH${Math.round((Number(S.zebraX)||0)*dpmm)},${Math.round((Number(S.zebraY)||0)*dpmm)}`;
+  if(style==='b') z+=band((c.name||cat.name).toUpperCase().slice(0,22));
+  else if(o.type==='reduced') z+=band('REDUCED');
+  else if(o.type==='special') z+=band('SPECIAL');
+  else if(o.type==='wasnow' && o.was>0){ const w=money(o.was);
+    z+=`^FO${d(8)},${d(7)}^A0N,${d(24)},${d(22)}^FDWAS^FS^FO${d(56)},${d(7)}^A0N,${d(24)},${d(22)}^FD${w}^FS^FO${d(54)},${d(17)}^GB${d(w.length*13+4)},${d(3)},${d(3)}^FS^FO0,${d(7)}^A0N,${d(24)},${d(22)}^FB${W-d(8)},1,0,R^FDNOW^FS`; }
+  else z+=centre(6,24,24,'THE PLANT SHACK');
+  const pr=money(c.price); z+= pr.length>7 ? centre(44,60,50,pr) : centre(38,72,64,pr);
+  const left=style==='b'?'THE PLANT SHACK':(c.name||cat.name).slice(0,20);
+  // date placed by hand: a right-justified ^FB printed lower than the name on the ZD printer
+  z+=`^FO${d(10)},${d(114)}^A0N,${d(20)},${d(18)}^FB${d(220)},1,0,L^FD${zplSafe(left)}^FS^FO${W-d(10)-date.length*d(11)},${d(114)}^A0N,${d(20)},${d(18)}^FD${date}^FS`;
+  // 3-dot bars (25mm wide); EAN guard bars hang ~5 modules below the rest, so the digits sit under them
+  const mod=Math.round(3*k), bw=67*mod;
+  z+=`^FO${Math.round((W-bw)/2)},${d(138)}^BY${mod}^B8N,${d(34)},N,N^FD${c.code.slice(0,7)}^FS`;
+  z+=centre(193,20,20,c.code);
+  return z+`^PQ${Math.max(1,qty|0)}^XZ`;
+}
+const ZB_HOSTS=['http://127.0.0.1:9100','https://127.0.0.1:9101','http://localhost:9100'];
+async function zebraFind(){
+  for(const base of ZB_HOSTS){
+    let def=null, list=[];
+    try{
+      const r=await fetch(base+'/default?type=printer',{cache:'no-store'}); if(!r.ok) continue;
+      const txt=(await r.text()).trim(); if(txt) def=JSON.parse(txt);
+    }catch(e){ continue; }
+    try{ const r=await fetch(base+'/available',{cache:'no-store'}); if(r.ok){ const j=await r.json(); list=(j.printer||[]); } }catch(e){}
+    if(def && !list.some(p=>p.uid===def.uid)) list.unshift(def);
+    const want=S.zebraPrinter, pick=want ? list.find(p=>p.uid===want||p.name===want) : def;
+    return {base, dev:pick||null, def, list, missing:!!(want&&!pick)};
+  }
+  return null;
+}
+function fillPrnList(z){
+  const sel=$('#stPrn'); if(!sel) return; const cur=S.zebraPrinter||'';
+  const opts=[`<option value="">Browser Print's default${z&&z.def?' ('+esc(z.def.name)+')':''}</option>`]
+    .concat((z?z.list:[]).map(p=>`<option value="${esc(p.uid)}">${esc(p.name)}${p.connection?' · '+esc(p.connection):''}</option>`));
+  if(cur && !(z&&z.list.some(p=>p.uid===cur))) opts.push(`<option value="${esc(cur)}">${esc(cur)} (not found)</option>`);
+  sel.innerHTML=opts.join(''); sel.value=cur;
+}
+function zbShow(msg,cls){ const el=$('#zbStatus'); el.textContent=msg; el.className='zb-status'+(cls?' '+cls:''); }
+async function zebraCheck(){
+  if((S.stickerMode||'zebra')!=='zebra'){ zbShow('Stickers use the print window.'); return null; }
+  zbShow('Looking for Zebra Browser Print…');
+  const z=await zebraFind();
+  if(!z){ zbShow('Zebra Browser Print isn’t answering on this computer. Check it’s running (the Zebra icon by the clock). It can’t be reached from inside the Claude preview.','bad'); return null; }
+  fillPrnList(z);
+  if(z.missing){ zbShow('The sticker printer you picked isn’t showing in Browser Print. Check it’s on and plugged in, or pick it again under Sticker printer settings.','bad'); return null; }
+  if(!z.dev){ zbShow('Browser Print is running but has no default printer. Pick the sticker printer under Sticker printer settings.','bad'); return null; }
+  if(!S.zebraPrinter && z.list.length>1){ zbShow(`${z.list.length} printers found. Pick the sticker printer under Sticker printer settings so stickers don’t go to the wrong one.`,'bad'); const s=$('.zb-set'); if(s) s.open=true; return null; }
+  zbShow(`Ready: ${z.dev.name||'Zebra printer'}`,'ok'); return z;
+}
+async function zebraPrint(c,qty){
+  const z=await zebraCheck(); if(!z) { toast('Couldn’t reach the Zebra. See the note under Print stickers.',true); return false; }
+  try{
+    const r=await fetch(z.base+'/write',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({device:z.dev,data:stickerZpl(c,qty)})});
+    if(!r.ok) throw new Error(r.status);
+    toast(`Sent ${qty} sticker${qty>1?'s':''} to ${z.dev.name||'the Zebra'}`); return true;
+  }catch(e){ zbShow('The printer didn’t take the job. Check it’s on, has labels, and is the one picked under Sticker printer settings.','bad'); toast('The Zebra didn’t take the job',true); return false; }
+}
+function stModeUi(){
+  const zb=(S.stickerMode||'zebra')==='zebra';
+  $('#stMode').value=zb?'zebra':'window'; $('#stDpi').value=String(S.zebraDpmm||8); $('#stDpiWrap').hidden=!zb; $('#stPrnWrap').hidden=!zb; $('#stDarkWrap').hidden=!zb; $('#stDark').value=String(S.zebraDark==null?-10:S.zebraDark);
+  $('#stX').value=zb?(S.zebraX||0):(S.printX||0); $('#stY').value=zb?(S.zebraY||0):(S.printY||0);
+  $('#stModeHelp').textContent=zb?'Needs Zebra Browser Print running on this computer. Pick the sticker printer above (tap Check the Zebra to refresh the list). Leave the position at 0 unless stickers come out off-centre.'
+    :'In the print window, pick the label printer, set paper to 40 × 27mm, margins None, scale 100%.';
+  if(!zb) zbShow('Stickers use the print window.'); else zbShow('');
+}
+function makeStickers(){
+  const cat=$('#stCat').value; const price=r2(parseFloat($('#stPrice').value)); const qty=Math.min(40,Math.max(1,parseInt($('#stQty').value,10)||1));
+  if(!(price>0)){ toast('Enter a price for the stickers',true); return null; }
+  const name=$('#stName').value.trim();
+  stickerOpts={type:$('#stType').value, was:r2(parseFloat($('#stWas').value))||0};
+  if(stickerOpts.type==='wasnow' && !(stickerOpts.was>price)){ toast('Enter a "was" price higher than the new price',true); return null; }
+  let c=S.codes.find(x=>x.cat===cat&&Math.abs(x.price-price)<0.001&&(x.name||'').toLowerCase()===name.toLowerCase()); let made=false;
+  if(!c){ let code; do{ code=ean8(S.nextBase++); }while(S.codes.some(x=>x.code===code)); c={code,cat,price,name,example:false}; S.codes.push(c); made=true; save(); }
+  $('#stSheet').innerHTML=Array.from({length:qty},()=>stickerHtml(c)).join('');
+  $('#stInfo').textContent = made? `New code ${c.code} made for ${name||catById(cat).name} at ${money(price)} and added to the price list. Scan it on the till by typing ${c.code}.` : `Reusing code ${c.code} for ${name||catById(cat).name} at ${money(price)}.`;
+  return {c,qty};
+}
+
+/* ---------- render: prices ---------- */
+function colourSel(attr,val){ return `<select ${attr}>${PALETTE.map(([v,n])=>`<option value="${v}"${v===val?' selected':''}>${n}</option>`).join('')}</select>`; }
+function renderPrices(){
+  $('#deptTable').innerHTML=`<thead><tr><th>Name</th><th>Colour</th><th></th><th></th></tr></thead><tbody>${S.depts.map((d,i)=>{ const used=S.codes.some(c=>c.cat===d.id);
+    return `<tr><td><input id="dn-${d.id}" data-d="${d.id}" data-f="label" value="${esc(d.label)}"></td><td>${colourSel(`data-d="${d.id}" data-f="color"`,d.color)} <span class="tag" style="background:${d.color};color:${isLight(d.color)?'#1a2018':'#fff'};border:0">${esc(d.label)}</span></td>
+    <td style="white-space:nowrap"><button class="btn sec" data-mv="${i}:-1" aria-label="Move up"${i?'':' disabled'}>↑</button> <button class="btn sec" data-mv="${i}:1" aria-label="Move down"${i<S.depts.length-1?'':' disabled'}>↓</button></td>
+    <td>${used?'<span class="tag">Has stickers</span>':`<button class="btn ${armed==='deld'+d.id?'armed':'sec'}" data-deld="${d.id}">${armed==='deld'+d.id?'Tap again':'Remove'}</button>`}</td></tr>`; }).join('')}</tbody>`;
+  $('#grpTable').innerHTML=`<thead><tr><th>Name</th><th>Colour</th><th>Buttons</th><th></th></tr></thead><tbody>${S.groups.map(g=>{ const n=S.buttons.filter(b=>b.group===g.id).length;
+    return `<tr><td><input id="gn-${g.id}" data-g="${g.id}" data-f="label" value="${esc(g.label)}"></td><td>${colourSel(`data-g="${g.id}" data-f="color"`,g.color)}</td><td class="num">${n}</td><td><button class="btn ${armed==='delg'+g.id?'armed':'sec'}" data-delg="${g.id}">${armed==='delg'+g.id?(n?`Tap again: removes ${n} button${n>1?'s':''}`:'Tap again'):'Remove'}</button></td></tr>`; }).join('')}</tbody>`;
+  $('#btnTable').innerHTML=`<thead><tr><th>Button</th><th>Group</th><th class="num">Price</th><th class="num">Deal qty</th><th class="num">Deal price</th><th>From</th><th></th></tr></thead><tbody>${S.buttons.map(b=>`<tr>
+    <td><input id="bn-${b.id}" data-b="${b.id}" data-f="name" value="${esc(b.name)}"></td>
+    <td><select data-b="${b.id}" data-f="group">${S.groups.map(g=>`<option value="${g.id}"${g.id===b.group?' selected':''}>${esc(g.label)}</option>`).join('')}</select></td>
+    <td><input id="bp-${b.id}" data-b="${b.id}" data-f="price" inputmode="decimal" value="${b.price==null?'':b.price}" placeholder="Ask"></td>
+    <td><input id="bq-${b.id}" data-b="${b.id}" data-f="dq" inputmode="numeric" value="${b.dq}"></td>
+    <td><input id="bd-${b.id}" data-b="${b.id}" data-f="dp" inputmode="decimal" value="${b.dp}"></td>
+    <td>${b.src?`<span class="tag">${esc(b.src)}</span>`:'<span class="tag ex">Needs price</span>'}</td>
+    <td><button class="btn sec" data-delb="${b.id}">Remove</button></td></tr>`).join('')}</tbody>`;
+  $('#codeTable').innerHTML=`<thead><tr><th>Code</th><th>Department</th><th>Name</th><th class="num">Price</th><th></th><th></th></tr></thead><tbody>${S.codes.map(c=>`<tr><td>${c.code}</td><td>${esc(catById(c.cat).name)}</td><td><input data-cn="${c.code}" maxlength="24" value="${esc(c.name||'')}" placeholder="No name"></td><td class="num">${money(c.price)}</td><td>${c.example?'<span class="tag ex">Example</span>':'<span class="tag">Yours</span>'}</td><td><button class="btn sec" data-reprint="${c.code}">Print stickers</button></td></tr>`).join('')}</tbody>`;
+}
+
+/* ---------- render: end of day ---------- */
+function todaySales(){ const d=new Date().toDateString(); return S.sales.filter(r=>new Date(r.time).toDateString()===d); }
+function renderEod(){
+  const ts=todaySales();
+  const sum=(arr,f)=>r2(arr.reduce((a,x)=>a+f(x),0));
+  const total=sum(ts,r=>r.total), cashT=sum(ts.filter(r=>r.method==='Cash'),r=>r.cashDue), eft=sum(ts.filter(r=>r.method==='EFTPOS'),r=>r.total), disc=sum(ts,r=>r.disc);
+  const acc=sum(ts.filter(r=>r.method==='Account'),r=>r.total);
+  const tp=(S.payments||[]).filter(x=>new Date(x.time).toDateString()===new Date().toDateString());
+  const invCash=sum(tp.filter(x=>x.method==='Cash'),x=>x.amount), invEft=sum(tp.filter(x=>x.method==='EFTPOS'),x=>x.amount);
+  const items=ts.reduce((a,r)=>a+r.lines.reduce((b,l)=>b+l.qty,0),0);
+  $('#eodTitle').textContent='End of day · '+new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+  const nEx=ts.filter(r=>r.example).length;
+  $('#eodSub').textContent=`${S.till} and every other till's sales, combined. ${nEx?`Includes ${nEx} example sale${nEx>1?'s':''} — remove them below once you've had a look.`:''}`;
+  $('#eodStats').innerHTML=`<div class="stat big"><span>Total sales</span><b>${money(total)}</b></div><div class="stat"><span>Cash</span><b>${money(cashT)}</b></div><div class="stat"><span>EFTPOS</span><b>${money(eft)}</b></div>${acc?`<div class="stat"><span>Invoiced, not paid</span><b>${money(acc)}</b></div>`:''}${invCash||invEft?`<div class="stat"><span>Invoices paid in store</span><b>${money(r2(invCash+invEft))}</b></div>`:''}<div class="stat"><span>Sales</span><b>${ts.length}</b></div><div class="stat"><span>Items</span><b>${items}</b></div><div class="stat"><span>Discounts given</span><b>${money(disc)}</b></div><div class="stat"><span>GST included</span><b>${money(r2(total/11))}</b></div><div class="stat"><span>Drawer opened, no sale</span><b>${(S.drawerOpens||[]).filter(o=>new Date(o.time).toDateString()===new Date().toDateString()).length}</b></div><div class="stat"><span>Average sale</span><b>${money(ts.length?r2(total/ts.length):0)}</b></div>`;
+  const fl=$('#eodFloat'); if(document.activeElement!==fl) fl.value=S.float;
+  const ct=$('#eodCounted'); if(document.activeElement!==ct) ct.value=S.counted;
+  const expected=r2(Number(S.float||0)+cashT+invCash);
+  const counted=parseFloat(S.counted); const diff=isNaN(counted)?null:r2(counted-expected);
+  $('#eodDrawer').innerHTML=`<div class="stat"><span>Should be in drawer</span><b>${money(expected)}</b></div>${diff===null?'':`<div class="${Math.abs(diff)<0.01?'diff-ok':'diff-bad'}">${Math.abs(diff)<0.01?'Drawer balances':diff>0?money(diff)+' over':money(-diff)+' short'}</div>`}`;
+  const byCat={}; ts.forEach(r=>r.lines.forEach(l=>{ const c=calcLine(l,r.pct); const known=S.depts.some(d=>d.id===l.cat)||S.groups.some(g=>g.id===l.cat); const k=known?catById(l.cat).label:(l.dl||l.name); byCat[k]=byCat[k]||{q:0,t:0}; byCat[k].q+=l.qty; byCat[k].t=r2(byCat[k].t+c.net); }));
+  const rows=Object.entries(byCat).sort((a,b)=>b[1].t-a[1].t);
+  $('#eodCats').innerHTML=`<thead><tr><th>Department</th><th class="num">Items</th><th class="num">Sales</th></tr></thead><tbody>${rows.map(([k,v])=>`<tr><td>${esc(k)}</td><td class="num">${v.q}</td><td class="num">${money(v.t)}</td></tr>`).join('')||'<tr><td colspan="3">No sales yet</td></tr>'}</tbody>`;
+  $('#eodSales').innerHTML=`<thead><tr><th>Time</th><th>Sale</th><th>Till</th><th>Paid</th><th class="num">Total</th><th></th></tr></thead><tbody>${[...ts].reverse().map(r=>`<tr><td>${new Date(r.time).toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'})}</td><td>${r.no}</td><td>${esc(r.till)}</td><td>${esc(r.method)}</td><td class="num">${money(r.total)}</td><td>${r.example?'<span class="tag ex">Example</span>':''} <button class="btn sec" data-rc="${r.no}">Receipt</button></td></tr>`).join('')||'<tr><td colspan="6">No sales yet</td></tr>'}</tbody>`;
+  $('#clearExamples').hidden=!S.sales.some(r=>r.example);
+  // keep today's drawer count so past days show over / short in Reports
+  if(!isNaN(counted)){ const k=isoDay(new Date()); S.days=S.days||{}; const was=S.days[k]; S.days[k]={float:Number(S.float||0),counted,expected};
+    if(!was||was.counted!==counted||was.expected!==expected) save(); }
+}
+
+function renderAll(){
+  if(view==='till'){ renderLines(); renderChips(); renderTotals(); renderKeys(); }
+  if(view==='prices') renderPrices();
+  if(view==='eod') renderEod();
+  if(view==='rep') renderRep();
+  if(view==='inv') renderInv();
+  if(view==='invedit') renderBuilder();
+}
+function setView(v){
+  view=v;
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===v));
+  ['till','stickers','inv','invedit','prices','eod','rep'].forEach(x=>{ $('#view-'+x).hidden = x!==v; });
+  if(v==='invedit') document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view==='inv'));
+  renderAll(); focusScan();
+  if(v==='stickers' && (S.stickerMode||'zebra')==='zebra') zebraCheck();
+}
+function focusScan(){ if(view==='till' && !$('#modalRoot').innerHTML) $('#scan').focus({preventScroll:true}); }
+
+/* ---------- invoices ---------- */
+// Customers, quotes and invoices live alongside the till. Prices are GST inclusive, like the till. Invoices are due when sent.
+function invInit(){
+  if(!S.customers) S.customers=[];
+  if(!S.invoices) S.invoices=[];
+  if(!S.payments) S.payments=[];
+  if(!S.invNo) S.invNo=1;
+  if(!S.quoteNo) S.quoteNo=1;
+  if(!S.invCfg) S.invCfg={email:'',bsb:'',acct:'',acctName:'The Plant Shack',cardLink:''};
+}
+const pad4 = n => String(n).padStart(4,'0');
+const dayStr = d => new Date(d).toLocaleDateString('en-AU');
+const isoDay = d => { const x=new Date(d); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().slice(0,10); };
+const custById = id => S.customers.find(c=>c.id===id);
+const lineGross = l => r2((Number(l.qty)||0)*(Number(l.price)||0));
+const lineNet = l => r2(lineGross(l)*(1-(Math.min(100,Math.max(0,Number(l.disc)||0)))/100));
+function invTotal(inv){ return r2(inv.lines.reduce((a,l)=>a+lineNet(l),0)); }
+function invDisc(inv){ return r2(inv.lines.reduce((a,l)=>a+lineGross(l)-lineNet(l),0)); }
+function invStatus(inv){
+  if(inv.void) return {t:'Void',cls:'ex'};
+  if(inv.kind==='quote') return inv.accepted?{t:'Accepted',cls:''}:{t:'Quote',cls:''};
+  if(inv.paid) return {t:'Paid',cls:''};
+  return {t:'Unpaid',cls:'ex'};
+}
+function owed(custId){ return r2(S.invoices.filter(i=>i.cust===custId&&i.kind==='invoice'&&!i.paid&&!i.void).reduce((a,i)=>a+invTotal(i),0)); }
+function newInvoice(kind,custId){ return {id:'i'+Date.now(), kind, no:null, cust:custId||'', date:isoDay(new Date()), lines:[{desc:'',qty:1,price:'',disc:''}], notes:'', paid:null}; }
+function saveInvoice(d){
+  if(!d.no) d.no = d.kind==='quote' ? 'Q-'+pad4(S.quoteNo++) : 'INV-'+pad4(S.invNo++);
+  d.lines=d.lines.filter(l=>String(l.desc).trim()||Number(l.price));
+  if(!d.lines.length) d.lines.push({desc:'',qty:1,price:'',disc:''});
+  const i=S.invoices.findIndex(x=>x.id===d.id);
+  const copy=JSON.parse(JSON.stringify(d));
+  if(i>=0) S.invoices[i]=copy; else S.invoices.push(copy);
+  save();
+}
+function addCustomer(name){ const c={id:'c'+Date.now()+Math.floor(Math.random()*1000), name:name||'New customer', phone:'', email:'', address:''}; S.customers.push(c); save(); return c; }
+
+/* list view */
+let invFilter='open', invDraft=null;
+function renderInv(){
+  invInit();
+  const rows=S.invoices.filter(i=> invFilter==='all' || (invFilter==='quotes'?i.kind==='quote' : invFilter==='paid'? (i.kind==='invoice'&&i.paid) : (i.kind==='invoice'&&!i.paid&&!i.void)))
+    .sort((a,b)=>b.date.localeCompare(a.date)||String(b.no).localeCompare(String(a.no)));
+  document.querySelectorAll('#invFilters button').forEach(b=>b.setAttribute('aria-selected',b.dataset.f===invFilter));
+  $('#invTable').innerHTML=`<thead><tr><th>No.</th><th>Customer</th><th>Date</th><th class="num">Total</th><th></th></tr></thead><tbody>${rows.map(i=>{ const st=invStatus(i), c=custById(i.cust);
+    return `<tr class="row" data-open="${i.id}" style="cursor:pointer"><td><b>${esc(i.no)}</b></td><td>${esc(c?c.name:'(no customer)')}</td><td>${dayStr(i.date)}</td><td class="num">${money(invTotal(i))}</td><td style="white-space:nowrap;text-align:right"><span class="tag ${st.cls}">${st.t}</span></td></tr>`; }).join('')||'<tr><td colspan="5">Nothing here yet</td></tr>'}</tbody>`;
+  $('#custTable').innerHTML=`<thead><tr><th>Name</th><th>Phone</th><th>Email</th><th class="num">Owing</th><th></th></tr></thead><tbody>${S.customers.map(c=>`<tr>
+    <td><input id="cn-${c.id}" data-c="${c.id}" data-f="name" value="${esc(c.name)}"></td>
+    <td><input data-c="${c.id}" data-f="phone" value="${esc(c.phone||'')}" inputmode="tel"></td>
+    <td><input data-c="${c.id}" data-f="email" value="${esc(c.email||'')}" inputmode="email"></td>
+    <td class="num">${money(owed(c.id))}</td>
+    <td style="white-space:nowrap"><button class="btn sec" data-newq="${c.id}">Quote</button> <button class="btn sec" data-newinv="${c.id}">Invoice</button></td></tr>`).join('')||'<tr><td colspan="5">No customers yet</td></tr>'}</tbody>`;
+  const g=S.invCfg; ['email','bsb','acct','acctName','cardLink'].forEach(k=>{ const el=$('#cfg-'+k); if(el && document.activeElement!==el) el.value=g[k]??''; });
+}
+
+/* builder view */
+function openInvoice(d){ invInit(); invDraft=JSON.parse(JSON.stringify(d)); setView('invedit'); }
+function renderBuilder(){
+  const d=invDraft; if(!d){ setView('inv'); return; }
+  const isQ=d.kind==='quote', st=invStatus(d), c=custById(d.cust);
+  $('#ibTitle').textContent=`${d.no?'':'New '}${isQ?'quote':'invoice'}${d.no?' '+d.no:''}`;
+  $('#ibStatus').className='tag '+st.cls; $('#ibStatus').textContent=st.t;
+  $('#ibCust').innerHTML=`<option value="">Pick a customer…</option>${S.customers.map(x=>`<option value="${x.id}"${x.id===d.cust?' selected':''}>${esc(x.name)}</option>`).join('')}<option value="__new">+ New customer</option>`;
+  $('#ibCustInfo').innerHTML=c?`${c.phone?esc(c.phone)+'<br>':''}${c.email?esc(c.email):'<span style="color:var(--muted)">No email yet: add it under Customers</span>'}`:'';
+  $('#ibDate').value=d.date;
+  $('#ibNotes').value=d.notes||'';
+  $('#ibQuick').innerHTML=`<option value="">Add from till buttons…</option>${S.groups.map(g=>`<optgroup label="${esc(g.label)}">${S.buttons.filter(b=>b.group===g.id).map(b=>`<option value="${b.id}">${esc(b.name)}${b.price!=null&&b.price!==''?' · '+money(Number(b.price)):''}</option>`).join('')}</optgroup>`).join('')}`;
+  renderIbLines();
+  const acts=[];
+  if(d.void){ $('#ibActions').innerHTML='<button class="btn sec" data-ib="pdf">Download PDF</button><button class="btn sec" data-ib="print">Print</button>'; $('#ibPaid').innerHTML=`Voided ${dayStr(d.void.date)}${d.void.staff?' by '+esc(d.void.staff):''}: ${esc(d.void.reason)}`; return; }
+  acts.push('<button class="btn" data-ib="save">Save</button>');
+  acts.push('<button class="btn sec" data-ib="pdf">Download PDF</button>');
+  acts.push('<button class="btn sec" data-ib="print">Print</button>');
+  if(isQ && !d.accepted) acts.push('<button class="btn sec" data-ib="toinv">Turn into invoice</button>');
+  if(!isQ && !d.paid) acts.push('<button class="btn sec" data-ib="pay">Mark as paid</button>');
+  if(!isQ && d.paid) acts.push('<button class="btn sec" data-ib="unpay">Mark as unpaid</button>');
+  if(d.no) acts.push(`<button class="btn danger" data-ib="void">Void ${isQ?'quote':'invoice'}</button>`);
+  else acts.push('<button class="btn sec" data-ib="discard">Discard draft</button>');
+  $('#ibActions').innerHTML=acts.join('');
+  $('#ibPaid').innerHTML=d.paid?`Paid ${esc(d.paid.method)} on ${dayStr(d.paid.date)}.`:'';
+}
+function renderIbLines(){
+  const d=invDraft;
+  $('#ibLines').innerHTML=d.lines.map((l,i)=>`<div class="ib-line">
+    <input class="ib-desc" data-il="${i}" data-f="desc" value="${esc(l.desc)}" placeholder="Item or service, e.g. Lilly Pilly 200mm" aria-label="Description">
+    <label><span>Qty</span><input data-il="${i}" data-f="qty" value="${esc(l.qty)}" inputmode="decimal"></label>
+    <label><span>Price</span><input data-il="${i}" data-f="price" value="${esc(l.price)}" inputmode="decimal" placeholder="0.00"></label>
+    <label><span>Disc %</span><input data-il="${i}" data-f="disc" value="${esc(l.disc||'')}" inputmode="decimal" placeholder="0"></label>
+    <div class="ib-amt"><span>Amount</span><b id="iblt-${i}">${money(lineNet(l))}</b></div>
+    <button class="btn sec ib-rm" data-ib="rm:${i}" aria-label="Remove line">✕</button></div>`).join('');
+  ibTotals();
+}
+function ibTotals(){
+  const d=invDraft, t=invTotal(d), disc=invDisc(d);
+  $('#ibSum').innerHTML=`<div><span>Subtotal</span><span>${money(r2(t+disc))}</span></div>${disc?`<div><span>Discounts</span><span>-${money(disc)}</span></div>`:''}<div class="ib-total"><span>Total</span><b>${money(t)}</b></div><div><span>GST included</span><span>${money(r2(t/11))}</span></div>`;
+  $('#ibPreview').innerHTML=invoiceDoc(d);
+}
+function ibCommitCust(){
+  if($('#ibCust').value==='__new'){ const n=$('#ibNewName').value.trim(); if(!n){ toast('Type the new customer’s name',true); $('#ibNewName').focus(); return false; } invDraft.cust=addCustomer(n).id; $('#ibNewCust').hidden=true; }
+  if(!invDraft.cust){ toast('Pick a customer first',true); return false; }
+  return true;
+}
+
+/* documents: on-screen preview, print, and PDF */
+function docHead(title,no,date){
+  const g=S.invCfg;
+  return `<div class="doc-top"><div><b style="font-size:1.6em">THE PLANT SHACK</b><br>2 Krause St, Deception Bay QLD<br>ABN 20 651 371 470${g.email?'<br>'+esc(g.email):''}</div>
+    <div style="text-align:right"><b style="font-size:1.6em">${title}</b><br>${esc(no||'(not saved yet)')}<br>${date}</div></div>`;
+}
+function payBlock(){
+  const g=S.invCfg;
+  return `<div class="doc-pay"><b>Payment due on receipt</b><br>
+    ${g.bsb||g.acct?`Bank transfer: ${esc(g.acctName||'The Plant Shack')} · BSB ${esc(g.bsb)} · Account ${esc(g.acct)}<br>`:''}
+    ${g.cardLink?`Pay by card online: ${esc(g.cardLink)}<br>`:'Pay by card online: link added when this is built for real<br>'}
+    Or pay in store with cash or EFTPOS.</div>`;
+}
+function invoiceDoc(d){
+  const c=custById(d.cust)||{name:''}; const t=invTotal(d), disc=invDisc(d); const isQ=d.kind==='quote';
+  const lines=d.lines.filter(l=>String(l.desc).trim()||Number(l.price)); const hasDisc=lines.some(l=>Number(l.disc)>0);
+  return `<div class="inv-doc">${d.void?`<div style="border:3px solid #b3261e;color:#b3261e;font-weight:700;text-align:center;padding:6px;margin-bottom:10px;font-size:1.4em">VOID · ${esc(d.void.reason)}</div>`:''}${docHead(isQ?'QUOTE':'TAX INVOICE', d.no, dayStr(d.date))}
+    <div class="doc-to"><b>${isQ?'Quote for':'Bill to'}</b><br>${esc(c.name||'—')}${c.phone?'<br>'+esc(c.phone):''}${c.email?'<br>'+esc(c.email):''}</div>
+    <table class="doc-tbl"><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Price</th>${hasDisc?'<th class="num">Disc</th>':''}<th class="num">Amount</th></tr></thead><tbody>
+    ${lines.map(l=>`<tr><td>${esc(l.desc)}</td><td class="num">${esc(l.qty)}</td><td class="num">${money(Number(l.price)||0)}</td>${hasDisc?`<td class="num">${Number(l.disc)>0?esc(l.disc)+'%':''}</td>`:''}<td class="num">${money(lineNet(l))}</td></tr>`).join('')||`<tr><td colspan="${hasDisc?5:4}" style="color:#888">No items yet</td></tr>`}</tbody></table>
+    <div class="doc-tot">${disc?`<div><span>Discounts</span><span>-${money(disc)}</span></div>`:''}<div><span>Total (inc GST)</span><b>${money(t)}</b></div><div><span>GST included</span><span>${money(r2(t/11))}</span></div>
+    ${d.paid?`<div><span>Paid ${esc(d.paid.method)}</span><span>${dayStr(d.paid.date)}</span></div>`:''}</div>
+    ${d.notes?`<p>${esc(d.notes)}</p>`:''}
+    ${isQ?'<p>This quote is valid for 30 days.</p>':d.paid?'<p><b>Paid, thank you.</b></p>':payBlock()}</div>`;
+}
+function printDoc(html){
+  let st=$('#printPos'); if(!st){ st=document.createElement('style'); st.id='printPos'; document.head.appendChild(st); }
+  st.textContent='@page{size:A4;margin:14mm}';
+  $('#printArea').innerHTML=html;
+  try{ window.print(); }catch(e){ toast('Printing is blocked here. Use Download PDF instead.',true); }
+}
+// Inside the Claude preview the print window is blocked, so Print makes the PDF instead.
+const inFrame=(()=>{ try{ return window.self!==window.top; }catch(e){ return true; } })();
+function printInvoice(d){ if(inFrame){ toast('Printing is blocked in this preview, so here is the PDF to print'); downloadPdf(d); return; } printDoc(invoiceDoc(d)); }
+let jsPdfLoading=null;
+function loadJsPdf(){
+  if(window.jspdf) return Promise.resolve(window.jspdf.jsPDF);
+  if(!jsPdfLoading) jsPdfLoading=new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; s.onload=()=>res(window.jspdf.jsPDF); s.onerror=()=>{ jsPdfLoading=null; rej(new Error('load')); }; document.head.appendChild(s); });
+  return jsPdfLoading;
+}
+async function invoicePdfBlob(d){
+  const JsPDF=await loadJsPdf();
+  const pdf=new JsPDF({unit:'mm',format:'a4'}); const g=S.invCfg; const c=custById(d.cust)||{name:''}; const isQ=d.kind==='quote';
+  const L=15, R=195; let y=20;
+  if(d.void){ pdf.setTextColor(179,38,30); pdf.setFont('helvetica','bold'); pdf.setFontSize(14); pdf.text('VOID · '+d.void.reason,L,y-8); pdf.setTextColor(0,0,0); }
+  pdf.setFont('helvetica','bold'); pdf.setFontSize(16); pdf.text('THE PLANT SHACK',L,y); pdf.text(isQ?'QUOTE':'TAX INVOICE',R,y,{align:'right'});
+  pdf.setFont('helvetica','normal'); pdf.setFontSize(10);
+  const left=['2 Krause St, Deception Bay QLD','ABN 20 651 371 470']; if(g.email) left.push(g.email);
+  left.forEach((t,i)=>pdf.text(t,L,y+6+i*5)); pdf.text(String(d.no||''),R,y+6,{align:'right'}); pdf.text(dayStr(d.date),R,y+11,{align:'right'});
+  y+=6+left.length*5+2; pdf.setLineWidth(0.6); pdf.line(L,y,R,y); y+=8;
+  pdf.setFont('helvetica','bold'); pdf.text(isQ?'Quote for':'Bill to',L,y); pdf.setFont('helvetica','normal');
+  [c.name,c.phone,c.email].filter(Boolean).forEach(t=>{ y+=5; pdf.text(String(t),L,y); }); y+=10;
+  const lines=d.lines.filter(l=>String(l.desc).trim()||Number(l.price)); const hasDisc=lines.some(l=>Number(l.disc)>0);
+  const cols=hasDisc?{q:120,p:145,d:165,a:R}:{q:135,p:160,a:R};
+  pdf.setFont('helvetica','bold'); pdf.text('Description',L,y); pdf.text('Qty',cols.q,y,{align:'right'}); pdf.text('Price',cols.p,y,{align:'right'}); if(hasDisc) pdf.text('Disc',cols.d,y,{align:'right'}); pdf.text('Amount',cols.a,y,{align:'right'});
+  pdf.setFont('helvetica','normal'); y+=2; pdf.setLineWidth(0.2); pdf.line(L,y,R,y);
+  lines.forEach(l=>{ const wrap=pdf.splitTextToSize(String(l.desc),(hasDisc?cols.q:cols.q)-L-12); y+=6;
+    if(y>270){ pdf.addPage(); y=20; }
+    pdf.text(wrap,L,y); pdf.text(String(l.qty),cols.q,y,{align:'right'}); pdf.text(money(Number(l.price)||0),cols.p,y,{align:'right'}); if(hasDisc&&Number(l.disc)>0) pdf.text(l.disc+'%',cols.d,y,{align:'right'}); pdf.text(money(lineNet(l)),cols.a,y,{align:'right'});
+    y+=(wrap.length-1)*5+2; pdf.line(L,y,R,y); });
+  y+=8; const t=invTotal(d), disc=invDisc(d);
+  const row=(a,b,bold)=>{ pdf.setFont('helvetica',bold?'bold':'normal'); pdf.setFontSize(bold?12:10); pdf.text(a,120,y); pdf.text(b,R,y,{align:'right'}); y+=6; };
+  if(disc) row('Discounts','-'+money(disc)); row('Total (inc GST)',money(t),true); row('GST included',money(r2(t/11)));
+  if(d.paid) row('Paid '+d.paid.method,dayStr(d.paid.date));
+  pdf.setFontSize(10); pdf.setFont('helvetica','normal');
+  if(d.notes){ y+=4; const w=pdf.splitTextToSize(d.notes,R-L); pdf.text(w,L,y); y+=w.length*5; }
+  y+=4;
+  if(isQ){ pdf.text('This quote is valid for 30 days.',L,y); }
+  else if(d.paid){ pdf.setFont('helvetica','bold'); pdf.text('Paid, thank you.',L,y); }
+  else {
+    const pay=['Payment due on receipt']; if(g.bsb||g.acct) pay.push(`Bank transfer: ${g.acctName||'The Plant Shack'} · BSB ${g.bsb} · Account ${g.acct}`);
+    pay.push(g.cardLink?'Pay by card online: '+g.cardLink:'Pay by card online: link added when this is built for real'); pay.push('Or pay in store with cash or EFTPOS.');
+    const h=pay.length*5+6; pdf.setLineWidth(0.3); pdf.rect(L,y-2,R-L,h);
+    pay.forEach((tx,i)=>{ pdf.setFont('helvetica',i?'normal':'bold'); pdf.text(tx,L+3,y+3+i*5); });
+  }
+  return pdf.output('blob');
+}
+async function downloadPdf(d){
+  let blob;
+  try{ blob=await invoicePdfBlob(d); }catch(e){ toast('Could not make the PDF (no internet?)',true); return; }
+  const name=`${d.no||'draft'} ${((custById(d.cust)||{}).name||'').replace(/[^\w ]+/g,'')}`.trim()+'.pdf';
+  const dl=(window.claude&&window.claude.use)? await window.claude.use('downloads').catch(()=>null) : null;
+  if(dl){ try{ await dl.save({filename:name, data:blob}); toast('Saved '+name); }catch(e){ if(e&&e.code!=='declined') toast('Could not save the PDF here',true); } return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+}
+
+/* "Invoice" at the till: the sale becomes an invoice for a customer */
+function onAccount(){
+  if(!S.sale.lines.length){ toast('Nothing in the sale yet',true); return; }
+  if(totalsFor(S.sale.lines,S.sale.pct).total<0){ toast('Refunds go back by cash or EFTPOS',true); return; }
+  invInit();
+  const list=S.customers.map(c=>`<button data-acc="${c.id}"><span>${esc(c.name)}</span><b>${money(owed(c.id))} owing</b></button>`).join('');
+  modal(`<h2>Invoice this sale</h2><p>The sale becomes an invoice for this customer to pay when you send it. Nothing goes in the drawer.</p>
+    <div class="form"><label>Find or add a customer<input id="accFind" placeholder="Type a name"></label></div>
+    <div class="list" id="accList">${list||'<p>No customers yet. Type a name and tap Add.</p>'}</div>
+    <div class="row-btns"><button data-x>Cancel</button><button class="ok" data-accnew>Add new customer</button></div>`,'wide');
+  $('[data-x]').onclick=closeModal;
+  const f=$('#accFind'); f.focus();
+  f.addEventListener('input',()=>{ const q=f.value.trim().toLowerCase(); document.querySelectorAll('[data-acc]').forEach(b=>{ b.hidden = q && !b.innerText.toLowerCase().includes(q); }); });
+  $('[data-accnew]').onclick=()=>{ const n=f.value.trim(); if(!n){ toast('Type the customer’s name first',true); f.focus(); return; } finishOnAccount(addCustomer(n).id); };
+  document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>finishOnAccount(b.dataset.acc));
+}
+function finishOnAccount(custId){
+  const pct=S.sale.pct;
+  const lines=S.sale.lines.map(l=>{ const c=calcLine(l,pct); return {desc:l.name+(l.code?` (${l.code})`:''), qty:l.qty, price:r2(c.net/l.qty), disc:''}; });
+  const target=totalsFor(S.sale.lines,pct).total; const got=r2(lines.reduce((a,l)=>a+lineNet(l),0));
+  if(Math.abs(target-got)>=0.005) lines.push({desc:'Rounding',qty:1,price:r2(target-got),disc:''});
+  const no=S.saleNo;
+  finish('Account');
+  const rec=S.sales[S.sales.length-1]; rec.cust=custId;
+  const inv=newInvoice('invoice',custId); inv.lines=lines; inv.notes=`Till sale ${no}`; saveInvoice(inv);
+  rec.inv=inv.no; save();
+  closeModal(); renderAll(); toast(`Invoice ${inv.no} made for ${custById(custId).name}`);
+}
+
+/* ---------- activity log: anything that changes money or prices, with who and which till ---------- */
+function logEvent(type,detail,amount){ (S.log=S.log||[]).push({time:new Date().toISOString(), till:S.till, staff:S.staff||'', type, detail:detail||'', amount:amount??null}); save(); }
+function fillStaff(){
+  S.staffList=S.staffList&&S.staffList.length?S.staffList:['Blake']; if(!S.staffList.includes(S.staff)) S.staff=S.staffList[0];
+  $('#staffName').innerHTML=S.staffList.map(n=>`<option${n===S.staff?' selected':''}>${esc(n)}</option>`).join('')+'<option value="__edit">Edit staff names…</option>';
+}
+function editStaff(){
+  modal(`<h2>Staff names</h2><p>Pick who's serving at the top of the screen. Sales and the activity log record the name.</p><div class="form"><label>One name per line<textarea id="stfList" rows="6">${esc(S.staffList.join('\n'))}</textarea></label></div><div class="row-btns"><button data-x>Cancel</button><button class="ok" id="stfOk">Save</button></div>`);
+  $('[data-x]').onclick=()=>{ closeModal(); fillStaff(); };
+  $('#stfOk').onclick=()=>{ const l=[...new Set($('#stfList').value.split('\n').map(s=>s.trim()).filter(Boolean))]; if(!l.length){ toast('Add at least one name',true); return; } S.staffList=l; save(); closeModal(); fillStaff(); };
+}
+
+/* ---------- reports: every sale is kept, so any period can be added up ---------- */
+let repRange='month';
+function findSales(list,q){
+  q=String(q||'').trim().toLowerCase(); if(!q) return list;
+  const n=parseFloat(q.replace('$',''));
+  return list.filter(r=>String(r.no).toLowerCase()===q || (!isNaN(n)&&/^[\d.$]+$/.test(q)&&(Math.abs(r.total-n)<0.005||String(r.no).includes(q))) || r.lines.some(l=>String(l.name).toLowerCase().includes(q)) || String(r.inv||'').toLowerCase().includes(q));
+}
+function repBounds(){
+  const t=new Date(); t.setHours(0,0,0,0); const day=(d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+  const mon=day(t,-((t.getDay()+6)%7)); let a=t, b=t;
+  if(repRange==='yesterday'){ a=b=day(t,-1); }
+  if(repRange==='week'){ a=mon; }
+  if(repRange==='lastweek'){ a=day(mon,-7); b=day(mon,-1); }
+  if(repRange==='month'){ a=new Date(t.getFullYear(),t.getMonth(),1); }
+  if(repRange==='lastmonth'){ a=new Date(t.getFullYear(),t.getMonth()-1,1); b=new Date(t.getFullYear(),t.getMonth(),0); }
+  if(repRange==='fy'){ a=new Date(t.getMonth()>=6?t.getFullYear():t.getFullYear()-1,6,1); }
+  if(repRange==='custom'){ const f=$('#repFrom').value, to=$('#repTo').value; if(f) a=new Date(f+'T00:00'); if(to) b=new Date(to+'T00:00'); if(b<a) [a,b]=[b,a]; }
+  const end=new Date(b); end.setHours(23,59,59,999);
+  return {a, b:end};
+}
+function sumUp(ts,pays){
+  const sum=(arr,f)=>r2(arr.reduce((x,r)=>x+f(r),0));
+  const total=sum(ts,r=>r.total), cash=sum(ts.filter(r=>r.method==='Cash'),r=>r.cashDue), eft=sum(ts.filter(r=>r.method==='EFTPOS'),r=>r.total);
+  const acc=sum(ts.filter(r=>r.method==='Account'),r=>r.total), disc=sum(ts,r=>r.disc||0);
+  const invPaid=sum(pays,x=>x.amount), items=ts.reduce((x,r)=>x+r.lines.reduce((y,l)=>y+l.qty,0),0);
+  const refunds=sum(ts.filter(r=>r.total<0),r=>-r.total);
+  return {total,cash,eft,acc,disc,invPaid,items,refunds,n:ts.length,gst:r2(total/11)};
+}
+function deptTotals(ts){
+  const by={}; ts.forEach(r=>r.lines.forEach(l=>{ const c=calcLine(l,r.pct); const known=S.depts.some(d=>d.id===l.cat)||S.groups.some(g=>g.id===l.cat); const k=known?catById(l.cat).label:(l.dl||l.name); by[k]=by[k]||{q:0,t:0}; by[k].q+=l.qty; by[k].t=r2(by[k].t+c.net); }));
+  return Object.entries(by).sort((a,b)=>b[1].t-a[1].t);
+}
+function renderRep(){
+  document.querySelectorAll('#repRange button').forEach(b=>b.setAttribute('aria-selected',b.dataset.r===repRange));
+  $('#repDates').hidden=repRange!=='custom';
+  const {a,b}=repBounds(); const inR=x=>{ const d=new Date(x.time); return d>=a&&d<=b; };
+  const ts=S.sales.filter(inR), pays=(S.payments||[]).filter(inR), s=sumUp(ts,pays);
+  const fmt=d=>d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  $('#repSub').textContent=isoDay(a)===isoDay(b)?fmt(a):`${fmt(a)} to ${fmt(b)}`;
+  $('#repStats').innerHTML=`<div class="stat big"><span>Total sales</span><b>${money(s.total)}</b></div><div class="stat"><span>Cash</span><b>${money(s.cash)}</b></div><div class="stat"><span>EFTPOS</span><b>${money(s.eft)}</b></div>${s.acc?`<div class="stat"><span>Invoiced at the till</span><b>${money(s.acc)}</b></div>`:''}${s.invPaid?`<div class="stat"><span>Invoices paid in store</span><b>${money(s.invPaid)}</b></div>`:''}<div class="stat"><span>Sales</span><b>${s.n}</b></div><div class="stat"><span>Items</span><b>${s.items}</b></div><div class="stat"><span>Average sale</span><b>${money(s.n?r2(s.total/s.n):0)}</b></div><div class="stat"><span>Discounts given</span><b>${money(s.disc)}</b></div>${s.refunds?`<div class="stat"><span>Refunds</span><b>${money(s.refunds)}</b></div>`:''}<div class="stat"><span>GST included</span><b>${money(s.gst)}</b></div>`;
+  // by day, or by month for long periods
+  const byMonth=(b-a)/864e5>62; $('#repByTitle').textContent=byMonth?'By month':'By day';
+  const groups={}; ts.forEach(r=>{ const k=byMonth?isoDay(r.time).slice(0,7):isoDay(r.time); (groups[k]=groups[k]||[]).push(r); });
+  const keys=Object.keys(groups).sort().reverse();
+  const label=k=>byMonth?new Date(k+'-01T00:00').toLocaleDateString('en-AU',{month:'long',year:'numeric'}):new Date(k+'T00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+  const drawer=k=>{ if(byMonth) return ''; const d=(S.days||{})[k]; if(!d||isNaN(d.counted)) return '<span style="color:var(--muted)">Not counted</span>'; const diff=r2(d.counted-d.expected); return Math.abs(diff)<0.01?'Balanced':`<span class="${diff>0?'over':'short'}">${money(Math.abs(diff))} ${diff>0?'over':'short'}</span>`; };
+  $('#repDays').innerHTML=`<thead><tr><th>${byMonth?'Month':'Day'}</th><th class="num">Sales</th><th class="num">Cash</th><th class="num">EFTPOS</th><th class="num">Total</th>${byMonth?'':'<th>Drawer</th>'}</tr></thead><tbody>${keys.map(k=>{ const g=sumUp(groups[k],[]); return `<tr><td>${byMonth?label(k):`<button class="linkbtn" data-day="${k}">${label(k)}</button>`}</td><td class="num">${g.n}</td><td class="num">${money(g.cash)}</td><td class="num">${money(g.eft)}</td><td class="num">${money(g.total)}</td>${byMonth?'':`<td>${drawer(k)}</td>`}</tr>`; }).join('')||`<tr><td colspan="6">No sales in this period</td></tr>`}</tbody>${keys.length>1?`<tfoot><tr><td>Total</td><td class="num">${s.n}</td><td class="num">${money(s.cash)}</td><td class="num">${money(s.eft)}</td><td class="num">${money(s.total)}</td>${byMonth?'':'<td></td>'}</tr></tfoot>`:''}`;
+  $('#repCats').innerHTML=`<thead><tr><th>Department</th><th class="num">Items</th><th class="num">Sales</th></tr></thead><tbody>${deptTotals(ts).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="num">${v.q}</td><td class="num">${money(v.t)}</td></tr>`).join('')||'<tr><td colspan="3">No sales</td></tr>'}</tbody>`;
+  const tills={}; ts.forEach(r=>{ const k=r.till||'Till 1'; (tills[k]=tills[k]||[]).push(r); });
+  $('#repTills').innerHTML=`<thead><tr><th>Till</th><th class="num">Sales</th><th class="num">Cash</th><th class="num">EFTPOS</th><th class="num">Total</th></tr></thead><tbody>${Object.keys(tills).sort().map(k=>{ const g=sumUp(tills[k],[]); return `<tr><td>${esc(k)}</td><td class="num">${g.n}</td><td class="num">${money(g.cash)}</td><td class="num">${money(g.eft)}</td><td class="num">${money(g.total)}</td></tr>`; }).join('')||'<tr><td colspan="5">No sales</td></tr>'}</tbody>`;
+  renderRepSales(ts);
+  const lg=(S.log||[]).filter(inR).slice().reverse(), refunds=ts.filter(r=>r.total<0);
+  $('#repLogSum').textContent=`${refunds.length} refund${refunds.length===1?'':'s'} (${money(-refunds.reduce((x,r)=>x+r.total,0))}) · ${lg.filter(x=>x.type==='Sale cancelled').length} cancelled · ${lg.filter(x=>x.type==='Drawer opened').length} drawer opens · ${lg.filter(x=>/price|Setup|Sticker/.test(x.type)).length} price or setup changes`;
+  $('#repLog').innerHTML=`<thead><tr><th>When</th><th>Till</th><th>Staff</th><th>What</th><th>Detail</th><th class="num">Amount</th></tr></thead><tbody>${lg.slice(0,300).map(x=>`<tr><td>${new Date(x.time).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}</td><td>${esc(x.till||'')}</td><td>${esc(x.staff||'')}</td><td>${esc(x.type)}</td><td>${esc(x.detail)}</td><td class="num">${x.amount==null?'':money(x.amount)}</td></tr>`).join('')||'<tr><td colspan="6">Nothing logged in this period</td></tr>'}</tbody>`;
+  const hasEx=S.sales.some(r=>r.example); $('#repClearEx').hidden=!hasEx; $('#repExample').hidden=S.sales.some(r=>r.example&&isoDay(r.time)!==isoDay(new Date()));
+}
+function renderRepSales(ts){
+  if(!ts){ const {a,b}=repBounds(); ts=S.sales.filter(x=>{ const d=new Date(x.time); return d>=a&&d<=b; }); }
+  const found=findSales(ts,$('#repFind').value).slice().sort((x,y)=>new Date(y.time)-new Date(x.time)), shown=found.slice(0,200);
+  $('#repSales').innerHTML=`<thead><tr><th>When</th><th>Sale</th><th>Till</th><th>Paid</th><th>Items</th><th class="num">Total</th><th></th></tr></thead><tbody>${shown.map(r=>`<tr><td>${new Date(r.time).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}</td><td>${r.no}</td><td>${esc(r.till||'')}</td><td>${esc(r.method)}</td><td>${esc(r.lines.map(l=>(l.qty>1?l.qty+' × ':'')+l.name).join(', ')).slice(0,60)}</td><td class="num">${money(r.total)}</td><td>${r.example?'<span class="tag ex">Example</span> ':''}<button class="btn sec" data-rc="${r.no}">Receipt</button></td></tr>`).join('')||'<tr><td colspan="7">No matching sales in this period</td></tr>'}</tbody>${found.length>200?`<tfoot><tr><td colspan="7">Showing the latest 200 of ${found.length}. Search or pick a shorter period to narrow it down.</td></tr></tfoot>`:''}`;
+}
+function csvCell(v){ v=String(v??''); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+async function offerFile(name,text){
+  const blob=new Blob([text],{type:'text/csv'});
+  const dl=(window.claude&&window.claude.use)? await window.claude.use('downloads').catch(()=>null) : null;
+  if(dl){ try{ await dl.save({filename:name, data:blob}); toast('Saved '+name); }catch(e){ if(e&&e.code!=='declined') toast('Could not save the file here',true); } return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+}
+function repCsv(kind){
+  const {a,b}=repBounds(); const ts=S.sales.filter(x=>{ const d=new Date(x.time); return d>=a&&d<=b; }).sort((x,y)=>new Date(x.time)-new Date(y.time));
+  const rows=[];
+  if(kind==='days'){
+    rows.push(['Date','Sales','Cash','EFTPOS','Invoiced','Discounts','GST included','Total','Drawer counted','Drawer expected']);
+    const g={}; ts.forEach(r=>{ (g[isoDay(r.time)]=g[isoDay(r.time)]||[]).push(r); });
+    Object.keys(g).sort().forEach(k=>{ const s=sumUp(g[k],[]), d=(S.days||{})[k]||{}; rows.push([k,s.n,s.cash,s.eft,s.acc,s.disc,s.gst,s.total,d.counted??'',d.expected??'']); });
+  } else {
+    rows.push(['Date','Time','Sale','Till','Staff','Paid','Item','Department','Qty','Amount','Sale total','Refund reason','Customer']);
+    ts.forEach(r=>r.lines.forEach((l,i)=>{ const c=calcLine(l,r.pct); rows.push([isoDay(r.time),new Date(r.time).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}),r.no,r.till||'',r.staff||'',r.method,l.name,l.dl||catById(l.cat).label,l.qty,c.net,i===0?r.total:'',i===0&&r.refund?r.refund.reason:'',i===0&&r.buyer?[r.buyer.name,r.buyer.abn].filter(Boolean).join(' '):'']); }));
+  }
+  offerFile(`Plant Shack ${kind==='days'?'daily totals':'sales'} ${isoDay(a)} to ${isoDay(b)}.csv`, rows.map(r=>r.map(csvCell).join(',')).join('\r\n'));
+}
+function clearExampleSales(){ S.sales=S.sales.filter(r=>!r.example); Object.keys(S.days||{}).forEach(k=>{ if(S.days[k].example) delete S.days[k]; }); save(); toast('Example sales removed'); }
+function addExampleHistory(){ // three months of made-up sales so the reports have something to show
+  let seed=7; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  const pool=[...S.codes.map(c=>lineFromCode(c,1)), ...S.buttons.filter(x=>x.price!=null&&x.price!=='').map(x=>lineFromButton(x,1))];
+  const out=[]; S.days=S.days||{};
+  for(let back=90; back>=1; back--){
+    const d=new Date(); d.setDate(d.getDate()-back); const wk=d.getDay(); const n=Math.round((wk===0||wk===6?28:14)+rnd()*12);
+    let cash=0;
+    for(let i=0;i<n;i++){
+      const t=new Date(d); t.setHours(8,0,0,0); t.setMinutes(Math.floor(rnd()*510));
+      const lines=Array.from({length:1+Math.floor(rnd()*3)},()=>({...pool[Math.floor(rnd()*pool.length)], qty:1+Math.floor(rnd()*rnd()*4)}));
+      const pct=rnd()<0.05?10:0, tot=totalsFor(lines,pct), method=rnd()<0.62?'EFTPOS':'Cash', cashDue=method==='Cash'?round5(tot.total):tot.total;
+      if(method==='Cash') cash=r2(cash+cashDue);
+      out.push({no:'', time:t.toISOString(), till:'Till '+(1+Math.floor(rnd()*3)), lines, pct, total:tot.total, disc:tot.disc, method, cashDue, tendered:method==='Cash'?Math.ceil(cashDue/10)*10:tot.total, change:0, example:true});
+    }
+    const k=isoDay(d), off=rnd()<0.7?0:round5((rnd()-0.5)*10); S.days[k]={float:200,counted:r2(200+cash+off),expected:r2(200+cash),example:true};
+  }
+  out.sort((x,y)=>new Date(x.time)-new Date(y.time)).forEach((r,i)=>{ r.no='E'+(i+1); r.change=r.method==='Cash'?r2(r.tendered-r.cashDue):0; });
+  S.sales=[...out,...S.sales]; save(); toast(`Added ${out.length} example sales over 3 months`);
+}
+
+/* ---------- events ---------- */
+$('#tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-view]'); if(b) setView(b.dataset.view); });
+$('#scan').addEventListener('keydown',e=>{
+  if((e.key==='*'||e.key==='x'||e.key==='X') && /^-?\d{1,4}$/.test(e.target.value.trim())){ e.preventDefault(); calcPress('x'); return; }
+  if(e.key==='Enter'){ e.preventDefault();
+    const v=e.target.value.trim();
+    if(/^-?\d{1,4}$/.test(v) || (!v && entry)){ calcPress('x'); return; } // short number = quantity; sticker codes are 8 digits
+    scan(v); e.target.value=''; } });
+$('#keys').addEventListener('click',e=>{ const b=e.target.closest('[data-a]'); if(b){ act(b.dataset.a); if(!$('#modalRoot').innerHTML) focusScan(); } });
+$('#lines').addEventListener('click',e=>{ const r=e.target.closest('tr[data-i]'); if(!r) return; const i=Number(r.dataset.i); selected = selected===i?-1:i; renderAll(); focusScan(); });
+$('#tillName').value=S.till;
+// each till keeps its own sale in progress; switching till sets this one aside and brings that one's back
+$('#tillName').addEventListener('change',e=>{
+  S.tillSales=S.tillSales||{}; S.tillSales[S.till]=S.sale;
+  S.till=e.target.value; S.sale=S.tillSales[S.till]||newSale(); delete S.tillSales[S.till];
+  selected=-1; pendingQty=0; entry=''; keyMode='main'; save(); renderAll(); focusScan();
+  toast(S.sale.lines.length?`${S.till}: sale in progress`:`${S.till}: ready`);
+});
+fillStCat();
+$('#stType').addEventListener('change',e=>{ $('#stWasWrap').hidden = e.target.value!=='wasnow'; if(e.target.value==='wasnow') $('#stWas').focus(); });
+['#stCat','#stType','#stWas','#stName','#stPrice','#stQty'].forEach(id=>{ $(id).addEventListener('input',previewStickers); $(id).addEventListener('change',previewStickers); });
+$('#addDept').addEventListener('click',()=>{ const id='d'+Date.now(); S.depts.push({id,label:'New department',name:'NEW DEPARTMENT',sticker:'NEW DEPARTMENT',color:PALETTE[8][0]}); save(); fillStCat(); renderPrices(); const el=document.getElementById('dn-'+id); if(el){ el.focus(); el.select(); } });
+$('#addGrp').addEventListener('click',()=>{ const id='g'+Date.now(); S.groups.push({id,label:'New group',color:PALETTE[9][0]}); save(); renderPrices(); const el=document.getElementById('gn-'+id); if(el){ el.focus(); el.select(); } });
+$('#stMake').addEventListener('click',makeStickers);
+$('#stPrint').addEventListener('click',()=>{
+  const r=makeStickers(); if(!r) return;
+  if((S.stickerMode||'zebra')==='zebra'){ zebraPrint(r.c,r.qty); return; }
+  const x=Number(S.printX)||0, y=Number(S.printY)||0;
+  let st=$('#printPos'); if(!st){ st=document.createElement('style'); st.id='printPos'; document.head.appendChild(st); }
+  st.textContent=`@page{size:${40+Math.max(0,x)}mm ${27+Math.max(0,y)}mm;margin:0} @media print{#printArea .sticker.a{margin:${y}mm 0 0 ${x}mm!important}}`;
+  $('#printArea').innerHTML=Array.from({length:r.qty},()=>stickerHtml(r.c)).join('');
+  try{ window.print(); }catch(e){ toast('This page could not open the print window',true); }
+});
+$('#stMode').addEventListener('change',e=>{ S.stickerMode=e.target.value; save(); stModeUi(); if(S.stickerMode==='zebra') zebraCheck(); });
+$('#stDpi').addEventListener('change',e=>{ S.zebraDpmm=Number(e.target.value)||8; save(); });
+$('#zbCheck').addEventListener('click',()=>zebraCheck());
+$('#stDark').addEventListener('change',e=>{ S.zebraDark=Number(e.target.value); save(); });
+$('#stPrn').addEventListener('change',e=>{ S.zebraPrinter=e.target.value; save(); zebraCheck(); });
+function fillStCat(){ const v=$('#stCat').value; $('#stCat').innerHTML=S.depts.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join(''); if(S.depts.some(c=>c.id===v)) $('#stCat').value=v; }
+$('#view-prices').addEventListener('change',e=>{ // log what was changed in Setup
+  const el=e.target; if(!('defaultValue' in el) || el.tagName==='SELECT') return; const was=el.defaultValue, now=el.value.trim(); if(was===now) return;
+  if(el.dataset.b){ const b=S.buttons.find(x=>x.id===el.dataset.b); if(b) logEvent(el.dataset.f==='price'?'Button price changed':'Setup changed',`${b.name}: ${el.dataset.f} ${was||'(blank)'} → ${now||'(blank)'}`); }
+  else if(el.dataset.cn) logEvent('Sticker name changed',`${el.dataset.cn}: ${was||'(none)'} → ${now||'(none)'}`);
+  else if(el.dataset.d||el.dataset.g) logEvent('Setup changed',`${was} → ${now}`);
+  el.defaultValue=now;
+});
+$('#view-prices').addEventListener('input',e=>{
+  const cn=e.target.closest('[data-cn]');
+  if(cn){ const c=S.codes.find(x=>x.code===cn.dataset.cn); if(c){ c.name=cn.value.trim(); save(); } return; }
+  const dd=e.target.closest('[data-d]');
+  if(dd){ const d=S.depts.find(x=>x.id===dd.dataset.d); const v=dd.value.trim();
+    if(dd.dataset.f==='color'){ d.color=v; save(); renderPrices(); }
+    else if(v){ d.label=v; d.name=v.toUpperCase(); d.sticker=v.toUpperCase(); save(); fillStCat(); }
+    return; }
+  const gg=e.target.closest('[data-g]');
+  if(gg){ const g=S.groups.find(x=>x.id===gg.dataset.g); const v=gg.value.trim();
+    if(gg.dataset.f==='color') g.color=v; else if(v) g.label=v;
+    save(); if(gg.dataset.f==='color') renderPrices(); return; }
+  const i=e.target.closest('[data-b]'); if(!i) return;
+  const b=S.buttons.find(x=>x.id===i.dataset.b); const f=i.dataset.f; let v=i.value.trim();
+  if(f==='price') b.price = v===''?null:(parseFloat(v)||null);
+  else if(f==='dq'||f==='dp') b[f] = v===''?'':(parseFloat(v)||'');
+  else if(f==='group'){ b.group=v; save(); renderPrices(); return; }
+  else b.name=v||b.name;
+  if(f==='price' && b.price!=null && !b.src) b.src='entered';
+  save();
+});
+$('#view-prices').addEventListener('click',e=>{
+  const mv=e.target.closest('[data-mv]'); if(mv){ const [i,dir]=mv.dataset.mv.split(':').map(Number); const j=i+dir; if(j>=0&&j<S.depts.length){ [S.depts[i],S.depts[j]]=[S.depts[j],S.depts[i]]; save(); renderPrices(); } return; }
+  const dd=e.target.closest('[data-deld]'); if(dd){ if(arm('deld'+dd.dataset.deld)){ S.depts=S.depts.filter(x=>x.id!==dd.dataset.deld); save(); fillStCat(); renderPrices(); } return; }
+  const dg=e.target.closest('[data-delg]'); if(dg){ const id=dg.dataset.delg; if(arm('delg'+id)){ S.groups=S.groups.filter(x=>x.id!==id); S.buttons=S.buttons.filter(b=>b.group!==id); if(keyMode==='grp:'+id) keyMode='main'; save(); renderPrices(); toast('Group removed'); } return; }
+  const d=e.target.closest('[data-delb]'); if(d){ S.buttons=S.buttons.filter(x=>x.id!==d.dataset.delb); save(); renderPrices(); return; }
+  const rp=e.target.closest('[data-reprint]'); if(rp){ const c=S.codes.find(x=>x.code===rp.dataset.reprint); if(!c) return;
+    setView('stickers'); fillStCat(); $('#stCat').value=c.cat; $('#stName').value=c.name||''; $('#stPrice').value=c.price; makeStickers();
+    const q=$('#stQty'); q.focus(); q.select(); toast('Set how many, then Print stickers'); }
+});
+$('#addBtn').addEventListener('click',()=>{ if(!S.groups.length){ toast('Add a button group first',true); return; } const id='b'+Date.now(); S.buttons.push({id,name:'New button',group:(S.groups[0]||{}).id||'mix',price:null,dq:'',dp:'',src:''}); save(); renderPrices(); const el=document.getElementById('bn-'+id); if(el){ el.focus(); el.select(); } });
+$('#eodFloat').addEventListener('input',e=>{ S.float=parseFloat(e.target.value)||0; save(); renderEod(); });
+$('#eodCounted').addEventListener('input',e=>{ S.counted=e.target.value; S.countedDay=isoDay(new Date()); save(); renderEod(); });
+if(S.countedDay!==isoDay(new Date())){ S.counted=''; S.countedDay=isoDay(new Date()); save(); } // the drawer count starts blank each new day
+$('#view-eod').addEventListener('click',e=>{ const r=e.target.closest('[data-rc]'); if(r) showReceipt(S.sales.find(x=>x.no==r.dataset.rc)); });
+$('#clearExamples').addEventListener('click',()=>{ clearExampleSales(); renderEod(); });
+$('#toReports').addEventListener('click',()=>setView('rep'));
+fillStaff();
+$('#staffName').addEventListener('change',e=>{ if(e.target.value==='__edit'){ editStaff(); return; } S.staff=e.target.value; save(); toast(`${S.staff} is serving`); });
+$('#repRange').addEventListener('click',e=>{ const b=e.target.closest('[data-r]'); if(!b) return; repRange=b.dataset.r;
+  if(repRange==='custom'&&!$('#repFrom').value){ const t=new Date(); $('#repTo').value=isoDay(t); t.setDate(1); $('#repFrom').value=isoDay(t); }
+  renderRep(); });
+$('#repFrom').addEventListener('change',renderRep); $('#repTo').addEventListener('change',renderRep);
+$('#repFind').addEventListener('input',()=>renderRepSales());
+$('#repCsvDays').addEventListener('click',()=>repCsv('days')); $('#repCsvSales').addEventListener('click',()=>repCsv('sales'));
+$('#repExample').addEventListener('click',()=>{ addExampleHistory(); repRange='lastmonth'; renderRep(); });
+$('#repClearEx').addEventListener('click',()=>{ clearExampleSales(); renderRep(); });
+$('#view-rep').addEventListener('click',e=>{
+  const r=e.target.closest('[data-rc]'); if(r){ showReceipt(S.sales.find(x=>String(x.no)===r.dataset.rc)); return; }
+  const d=e.target.closest('[data-day]'); if(d){ repRange='custom'; $('#repFrom').value=d.dataset.day; $('#repTo').value=d.dataset.day; renderRep(); }
+});
+document.addEventListener('click',e=>{ if(view==='till' && !e.target.closest('input,select,.overlay')) focusScan(); });
+
+function tick(){ $('#clock').textContent=new Date().toLocaleString('en-AU',{weekday:'short',hour:'numeric',minute:'2-digit'}); }
+tick(); setInterval(tick,30000);
+
+// first sticker sheet preview
+$('#stPrice').value='29.95';
+if(!STYLES[S.stickerStyle]) S.stickerStyle='a';
+$('#stStyle').value=S.stickerStyle;
+const typeShown=()=>{};
+typeShown();
+if(S.printX==null) S.printX=20;
+stModeUi();
+$('#stX').addEventListener('input',e=>{ S[(S.stickerMode||'zebra')==='zebra'?'zebraX':'printX']=parseFloat(e.target.value)||0; save(); });
+$('#stY').addEventListener('input',e=>{ S[(S.stickerMode||'zebra')==='zebra'?'zebraY':'printY']=parseFloat(e.target.value)||0; save(); });
+$('#stStyle').addEventListener('change',e=>{ S.stickerStyle=e.target.value; save(); previewStickers(); });
+$('#stSheet').innerHTML=Object.entries(STYLES).map(([k,v])=>`<div class="cmp"><span>${v}</span>${stickerHtml(S.codes[0],k)}</div>`).join('');
+$('#stInfo').textContent='Both designs side by side. Name band puts the name (or the department) across the top. Was / Now, Reduced and Special print in the Big price layout.';
+invInit();
+$('#invFilters').addEventListener('click',e=>{ const b=e.target.closest('[data-f]'); if(b){ invFilter=b.dataset.f; renderInv(); } });
+$('#newQuote').addEventListener('click',()=>openInvoice(newInvoice('quote')));
+$('#newInv').addEventListener('click',()=>openInvoice(newInvoice('invoice')));
+$('#addCust').addEventListener('click',()=>{ const c=addCustomer(''); renderInv(); const el=document.getElementById('cn-'+c.id); if(el){ el.value=''; el.focus(); } });
+$('#view-inv').addEventListener('input',e=>{
+  const c=e.target.closest('[data-c]');
+  if(c){ const cu=custById(c.dataset.c); const f=c.dataset.f; cu[f]=c.value.trim()||(f==='name'?cu.name:''); save(); return; }
+  const g=e.target.closest('[data-cfg]'); if(g){ S.invCfg[g.dataset.cfg]=g.value.trim(); save(); }
+});
+$('#view-inv').addEventListener('click',e=>{
+  const o=e.target.closest('[data-open]'); if(o){ openInvoice(S.invoices.find(i=>i.id===o.dataset.open)); return; }
+  const n=e.target.closest('[data-newinv]'); if(n){ openInvoice(newInvoice('invoice',n.dataset.newinv)); return; }
+  const q=e.target.closest('[data-newq]'); if(q){ openInvoice(newInvoice('quote',q.dataset.newq)); return; }
+});
+$('#view-invedit').addEventListener('input',e=>{
+  const t=e.target, d=invDraft; if(!d) return;
+  if(t.dataset.il!=null){ const l=d.lines[Number(t.dataset.il)]; l[t.dataset.f]=t.value; $('#iblt-'+t.dataset.il).textContent=money(lineNet(l)); ibTotals(); return; }
+  if(t.id==='ibDate'){ d.date=t.value; ibTotals(); }
+  if(t.id==='ibNotes'){ d.notes=t.value; ibTotals(); }
+});
+$('#view-invedit').addEventListener('change',e=>{
+  const t=e.target, d=invDraft; if(!d) return;
+  if(t.id==='ibCust'){ const nc=t.value==='__new'; $('#ibNewCust').hidden=!nc; if(nc){ $('#ibNewName').focus(); } else { d.cust=t.value; renderBuilder(); } }
+  if(t.id==='ibQuick' && t.value){ const b=S.buttons.find(x=>x.id===t.value); const blank=d.lines.findIndex(l=>!String(l.desc).trim()&&!Number(l.price));
+    const nl={desc:b.name,qty:1,price:b.price==null?'':String(b.price),disc:''}; if(blank>=0) d.lines[blank]=nl; else d.lines.push(nl); t.value=''; renderIbLines(); }
+});
+$('#view-invedit').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-ib]'); if(!b) return; const a=b.dataset.ib, d=invDraft;
+  if(a==='back'){ invDraft=null; setView('inv'); return; }
+  if(a==='addline'){ d.lines.push({desc:'',qty:1,price:'',disc:''}); renderIbLines(); const ins=document.querySelectorAll('#ibLines .ib-desc'); ins[ins.length-1].focus(); return; }
+  if(a.startsWith('rm:')){ d.lines.splice(Number(a.slice(3)),1); if(!d.lines.length) d.lines.push({desc:'',qty:1,price:'',disc:''}); renderIbLines(); return; }
+  if(a==='discard'){ invDraft=null; setView('inv'); return; }
+  if(a==='void'){ // numbered quotes and invoices are kept and marked void, so the numbers have no gaps
+    if(d.paid){ toast('Mark it as unpaid first, then void it',true); return; }
+    modal(`<h2>Void ${esc(d.no)}</h2><p>It stays in the records marked VOID, so the numbering has no gaps.</p><div class="form"><label>Reason<input id="vdR" maxlength="60" placeholder="e.g. Customer cancelled the order"></label></div><div class="row-btns"><button data-x>Cancel</button><button class="ok" id="vdOk">Void it</button></div>`);
+    $('[data-x]').onclick=closeModal; $('#vdR').focus();
+    $('#vdOk').onclick=()=>{ const r=$('#vdR').value.trim(); if(!r){ toast('Add a reason',true); return; } d.void={reason:r,date:new Date().toISOString(),staff:S.staff||''}; saveInvoice(d); logEvent('Invoice voided',`${d.no} · ${r}`,invTotal(d)); closeModal(); renderBuilder(); toast(`${d.no} voided`); };
+    return; }
+  if(!ibCommitCust()) return;
+  if(a==='save'){ saveInvoice(d); invDraft=null; setView('inv'); toast('Saved'); return; }
+  if(a==='print'){ saveInvoice(d); renderBuilder(); printInvoice(d); return; }
+  if(a==='pdf'){ saveInvoice(d); renderBuilder(); await downloadPdf(d); return; }
+  if(a==='toinv'){ d.accepted=true; saveInvoice(d); const inv={...JSON.parse(JSON.stringify(d)), id:'i'+Date.now(), kind:'invoice', no:null, accepted:false, fromQuote:d.no, date:isoDay(new Date()), notes:d.notes}; saveInvoice(inv); invDraft=inv; renderBuilder(); toast(`${d.no} is now invoice ${inv.no}`); return; }
+  if(a==='unpay'){ logEvent('Payment removed',`${d.no} was marked paid ${d.paid.method}`,invTotal(d)); d.paid=null; S.payments=S.payments.filter(p=>p.inv!==d.no); saveInvoice(d); renderBuilder(); return; }
+  if(a==='pay'){ saveInvoice(d);
+    modal(`<h2>Mark ${esc(d.no)} as paid</h2><p>${money(invTotal(d))}. Cash and EFTPOS taken in store go into today's end of day.</p>
+      <div class="chiprow">${['Cash','EFTPOS','Bank transfer','Card (online)'].map(m=>`<button data-pm="${m}">${m}</button>`).join('')}</div>
+      <div class="row-btns"><button data-x>Cancel</button></div>`);
+    $('[data-x]').onclick=closeModal;
+    document.querySelectorAll('[data-pm]').forEach(x=>x.onclick=()=>{ const m=x.dataset.pm, now=new Date().toISOString();
+      d.paid={method:m,date:now};
+      if(m==='Cash'||m==='EFTPOS') S.payments.push({time:now, till:S.till, method:m, amount:invTotal(d), inv:d.no});
+      saveInvoice(d); closeModal(); renderBuilder(); toast(`${d.no} marked paid (${m})`); });
+    return; }
+});
+$('#ibNewName').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); if(ibCommitCust()) renderBuilder(); } });
+setView('till');
+})();
+</script>
+
+</body></html>
