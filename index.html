@@ -242,7 +242,7 @@ table{width:100%;border-collapse:collapse}
   .app,#modalRoot,#toastRoot{display:none!important}
   #printArea{display:block}
   /* thermal printers turn grey and thin text into faint dots, so receipts print in solid black, heavier type */
-  #printArea .receipt{box-shadow:none;border-radius:0;width:72mm;margin:0;padding:2mm 3mm;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#000;background:#fff;line-height:1.35}
+  #printArea .receipt{box-shadow:none;border-radius:0;width:64mm;margin:0 0 0 5mm;padding:2mm 3mm;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#000;background:#fff;line-height:1.35}
   #printArea .receipt b{font-weight:800}
   #printArea .receipt hr{border-top:1px solid #000}
   #printArea .sticker.a{box-shadow:none;border-radius:0;margin:0;break-after:page;page-break-after:always}
@@ -791,18 +791,24 @@ function showReceipt(r){
   $('[data-x]').onclick=closeModal;
   $('[data-pr]').onclick=()=>printReceipt(r);
 }
-function printReceipt(r){
+// page length fits the receipt, so the printer doesn't feed blank paper after it
+function receiptPage(html){
+  const m=document.createElement('div'); m.className='receipt';
+  m.style.cssText='position:absolute;left:-9999px;top:0;width:64mm;padding:2mm 3mm;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;line-height:1.35;box-shadow:none';
+  m.innerHTML=html.replace(/^<div class="receipt">|<\/div>$/g,''); document.body.appendChild(m);
+  const mm=Math.ceil(m.getBoundingClientRect().height/3.7795)+12; m.remove();
   let st=$('#printPos'); if(!st){ st=document.createElement('style'); st.id='printPos'; document.head.appendChild(st); }
-  st.textContent='@page{size:80mm 200mm;margin:0}';
-  $('#printArea').innerHTML=receiptHtml(r);
+  st.textContent=`@page{size:80mm ${Math.max(40,mm)}mm;margin:0}`;
+  $('#printArea').innerHTML=html;
+}
+function printReceipt(r){
+  receiptPage(receiptHtml(r));
   try{ window.print(); }catch(e){ toast('This page could not open the print window',true); }
 }
 
 function printNoSale(){ // a short slip, so the printer kicks the drawer open
-  let st=$('#printPos'); if(!st){ st=document.createElement('style'); st.id='printPos'; document.head.appendChild(st); }
-  st.textContent='@page{size:80mm 40mm;margin:0}';
   const d=new Date();
-  $('#printArea').innerHTML=`<div class="receipt"><div class="c"><b>NO SALE</b><br>${d.toLocaleDateString('en-AU')} ${d.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'})}<br>${esc(S.till)}${S.staff?' · '+esc(S.staff):''}</div></div>`;
+  receiptPage(`<div class="receipt"><div class="c"><b>NO SALE</b><br>${d.toLocaleDateString('en-AU')} ${d.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'})}<br>${esc(S.till)}${S.staff?' · '+esc(S.staff):''}</div></div>`);
   try{ window.print(); }catch(e){}
 }
 
