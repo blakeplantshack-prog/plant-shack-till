@@ -212,6 +212,8 @@ table{width:100%;border-collapse:collapse}
 .ib-line label span,.ib-amt span{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase}
 .ib-amt b{padding:9px 0}
 .ib-line input{width:100%;box-sizing:border-box}
+.ib-locked .ib-rm,.ib-locked [data-ib="addline"],.ib-locked #ibQuick{display:none}
+.ib-locked .ib-build :is(input,select,textarea):disabled{background:transparent;border-color:transparent;color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:1;appearance:none;padding-left:0;resize:none}
 .ib-amt{text-align:right;align-items:flex-end}
 .ib-amt b{font-variant-numeric:tabular-nums}
 .ib-rm{border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--muted);padding:8px 4px}
@@ -371,7 +373,7 @@ table{width:100%;border-collapse:collapse}
   <section class="view" id="view-inv" hidden>
     <div class="card">
       <h2>Quotes &amp; invoices</h2>
-      <p>Prices include GST and invoices are due when sent. Tap a row to open it.</p>
+      <p>Prices include GST. Invoices are due in 7 days and quotes last 30 days, unless you change them. Tap a row to open it.</p>
       <div class="actions" style="margin-bottom:10px">
         <button class="btn" id="newQuote">New quote</button><button class="btn" id="newInv">New invoice</button><button class="btn sec" id="invExample">Add example quotes &amp; invoices</button><button class="btn sec" id="invClearEx" hidden>Remove examples</button>
       </div>
@@ -412,6 +414,8 @@ table{width:100%;border-collapse:collapse}
           <div class="ib-grid">
             <label class="ib-field">Customer<select id="ibCust"></select><small id="ibCustInfo"></small></label>
             <label class="ib-field">Date<input type="date" id="ibDate"></label>
+            <label class="ib-field"><span id="ibDueLbl">Due date</span><input type="date" id="ibDue"></label>
+            <label class="ib-field">Order or reference no.<input id="ibRef" maxlength="40" placeholder="e.g. PO 4471"></label>
           </div>
           <div id="ibNewCust" hidden class="ib-field" style="margin-top:10px"><label class="ib-field">New customer name<input id="ibNewName" placeholder="e.g. Sue Smith, then press Enter"></label></div>
         </div>
@@ -1162,7 +1166,7 @@ function setView(v){
 function focusScan(){ if(view==='till' && !$('#modalRoot').innerHTML) $('#scan').focus({preventScroll:true}); }
 
 /* ---------- invoices ---------- */
-// Customers, quotes and invoices live alongside the till. Prices are GST inclusive, like the till. Invoices are due when sent.
+// Customers, quotes and invoices live alongside the till. Prices are GST inclusive, like the till.
 function invInit(){
   if(!S.customers) S.customers=[];
   if(!S.invoices) S.invoices=[];
@@ -1170,7 +1174,11 @@ function invInit(){
   if(!S.invNo) S.invNo=1;
   if(!S.quoteNo) S.quoteNo=1;
   if(!S.invCfg) S.invCfg={email:'',bsb:'',acct:'',acctName:'The Plant Shack',cardLink:''};
+  if(!S.invCfg.bsb && !S.invCfg.acct && !S.invCfg.dummyBankDone){ Object.assign(S.invCfg,{bsb:'064-000',acct:'1234 5678',acctName:S.invCfg.acctName||'The Plant Shack',dummyBankDone:true}); } // example details for the trial: change them under Invoice details
 }
+// invoices are due 7 days after the invoice date and quotes expire after 30 days, unless changed on the document
+const addDays = (iso,n) => { const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return isoDay(d); };
+const invDue = d => d.due || addDays(d.date, d.kind==='quote'?30:7);
 const pad4 = n => String(n).padStart(4,'0');
 const dayStr = d => new Date(d).toLocaleDateString('en-AU');
 const isoDay = d => { const x=new Date(d); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().slice(0,10); };
@@ -1183,6 +1191,7 @@ function invStatus(inv){
   if(inv.void) return {t:'Void',cls:'ex'};
   if(inv.kind==='quote') return inv.accepted?{t:'Accepted',cls:''}:{t:'Quote',cls:''};
   if(inv.paid) return {t:'Paid',cls:''};
+  if(invDue(inv)<isoDay(new Date())) return {t:'Overdue',cls:'ex'};
   return {t:'Unpaid',cls:'ex'};
 }
 function owed(custId){ return r2(S.invoices.filter(i=>i.cust===custId&&i.kind==='invoice'&&!i.paid&&!i.void).reduce((a,i)=>a+invTotal(i),0)); }
@@ -1205,10 +1214,10 @@ function addExampleInvoices(){
         bay=cust('Bayside Primary School','07 3203 5500','office@bayside.example.edu.au'), tom=cust('Tom Nguyen','0433 210 987','');
   const L=(desc,qty,price,disc)=>({desc,qty,price:String(price),disc:disc?String(disc):''});
   const docs=[
-    {kind:'quote',cust:sue,date:day(2),notes:'Includes delivery and planting. Valid for 30 days.',lines:[L('Lilly Pilly Resilience 200mm',12,34.95,10),L('Premium Garden Mix 50L',6,18.95),L('Delivery (Deception Bay)',1,40),L('Planting labour (hours)',3,65)]},
-    {kind:'quote',cust:bay,date:day(5),notes:'Veggie garden for the Year 3 classroom. Can deliver on a pupil-free day.',lines:[L('Raised garden bed 1.2m',4,149),L('Organic veggie mix 30L',16,14.95),L('Veggie seedlings (punnet)',24,4.95,15),L('Sugar cane mulch bale',4,24.95)]},
+    {kind:'quote',cust:sue,date:day(2),ref:'Front garden',notes:'Includes delivery and planting.',lines:[L('Lilly Pilly Resilience 200mm',12,34.95,10),L('Premium Garden Mix 50L',6,18.95),L('Delivery (Deception Bay)',1,40),L('Planting labour (hours)',3,65)]},
+    {kind:'quote',cust:bay,date:day(5),ref:'Order 2026-118',notes:'Veggie garden for the Year 3 classroom. Can deliver on a pupil-free day.',lines:[L('Raised garden bed 1.2m',4,149),L('Organic veggie mix 30L',16,14.95),L('Veggie seedlings (punnet)',24,4.95,15),L('Sugar cane mulch bale',4,24.95)]},
     {kind:'quote',cust:gt,date:day(9),accepted:true,notes:'Accepted by phone.',lines:[L('Lomandra Tanika 140mm',60,12.95,15),L('Dianella Little Rev 140mm',40,11.95,15),L('Tea Tree Mulch (bulk m³)',3,85)]},
-    {kind:'invoice',cust:gt,date:day(8),notes:'From quote Q-EX3. Payment due on receipt.',lines:[L('Lomandra Tanika 140mm',60,12.95,15),L('Dianella Little Rev 140mm',40,11.95,15),L('Tea Tree Mulch (bulk m³)',3,85),L('Delivery (Narangba)',1,55)]},
+    {kind:'invoice',cust:gt,date:day(8),ref:'PO 4471',notes:'From quote Q-EX3.',lines:[L('Lomandra Tanika 140mm',60,12.95,15),L('Dianella Little Rev 140mm',40,11.95,15),L('Tea Tree Mulch (bulk m³)',3,85),L('Delivery (Narangba)',1,55)]},
     {kind:'invoice',cust:sue,date:day(20),paid:{method:'Bank transfer',date:new Date(Date.now()-18*864e5).toISOString()},notes:'Thanks Sue!',lines:[L('Bird of Paradise 300mm',2,79.95),L('Glazed pot 40cm, navy',2,89),L('Potting mix 30L Platinum',4,16.95)]},
     {kind:'invoice',cust:tom,date:day(1),notes:'Hedge order, delivery Saturday morning.',lines:[L('Murraya paniculata 200mm',25,29.95,10),L('Delivery (North Lakes)',1,45)]},
     {kind:'invoice',cust:bay,date:day(14),void:{reason:'Order changed, replaced by a new quote',date:new Date(Date.now()-12*864e5).toISOString(),staff:S.staff||''},lines:[L('Raised garden bed 1.2m',2,149)]}
@@ -1233,7 +1242,7 @@ function invMatch(i,f){
 function invFound(i,q){
   if(!q) return true;
   const c=custById(i.cust), t=invTotal(i);
-  const hay=[i.no, c&&c.name, c&&c.phone, c&&c.email, i.notes, ...(i.lines||[]).map(l=>l.desc), t.toFixed(2), money(t)].join(' ').toLowerCase();
+  const hay=[i.no, i.ref, c&&c.name, c&&c.phone, c&&c.email, i.notes, ...(i.lines||[]).map(l=>l.desc), t.toFixed(2), money(t)].join(' ').toLowerCase();
   return q.toLowerCase().split(/\s+/).every(w=>hay.includes(w.replace(/^\$/,'')));
 }
 function renderInv(){
@@ -1256,7 +1265,8 @@ function renderInv(){
 }
 
 /* builder view */
-function openInvoice(d){ invInit(); if(d.kind!==invKind){ invKind=d.kind; invFilter='all'; } invDraft=JSON.parse(JSON.stringify(d)); setView('invedit'); }
+let ibLocked=false; // saved quotes and invoices open read-only until Edit is pressed
+function openInvoice(d){ invInit(); if(d.kind!==invKind){ invKind=d.kind; invFilter='all'; } ibLocked=!!(d.no||d.void); invDraft=JSON.parse(JSON.stringify(d)); setView('invedit'); }
 function renderBuilder(){
   const d=invDraft; if(!d){ setView('inv'); return; }
   const isQ=d.kind==='quote', st=invStatus(d), c=custById(d.cust);
@@ -1264,20 +1274,28 @@ function renderBuilder(){
   $('#ibStatus').className='tag '+st.cls; $('#ibStatus').textContent=st.t;
   $('#ibCust').innerHTML=`<option value="">Pick a customer…</option>${S.customers.map(x=>`<option value="${x.id}"${x.id===d.cust?' selected':''}>${esc(x.name)}</option>`).join('')}<option value="__new">+ New customer</option>`;
   $('#ibCustInfo').innerHTML=c?`${c.phone?esc(c.phone)+'<br>':''}${c.email?esc(c.email):'<span style="color:var(--muted)">No email yet: add it under Customers</span>'}`:'';
-  $('#ibDate').value=d.date;
+  $('#ibDate').value=d.date; $('#ibDue').value=invDue(d); $('#ibDueLbl').textContent=isQ?'Expires':'Due date'; $('#ibRef').value=d.ref||'';
   $('#ibNotes').value=d.notes||'';
   $('#ibQuick').innerHTML=`<option value="">Add from till buttons…</option>${S.groups.map(g=>`<optgroup label="${esc(g.label)}">${S.buttons.filter(b=>b.group===g.id).map(b=>`<option value="${b.id}">${esc(b.name)}${b.price!=null&&b.price!==''?' · '+money(Number(b.price)):''}</option>`).join('')}</optgroup>`).join('')}`;
   renderIbLines();
+  const lock=ibLocked||!!d.void;
+  $('#view-invedit').classList.toggle('ib-locked',lock);
+  document.querySelectorAll('#view-invedit .ib-build :is(input,select,textarea)').forEach(el=>el.disabled=lock);
+  if(lock) $('#ibNewCust').hidden=true;
   const acts=[];
   if(d.void){ $('#ibActions').innerHTML='<button class="btn sec" data-ib="pdf">Download PDF</button><button class="btn sec" data-ib="print">Print</button>'; $('#ibPaid').innerHTML=`Voided ${dayStr(d.void.date)}${d.void.staff?' by '+esc(d.void.staff):''}: ${esc(d.void.reason)}`; return; }
-  acts.push('<button class="btn" data-ib="save">Save</button>');
+  if(!lock){
+    acts.push('<button class="btn" data-ib="save">Save</button>');
+    acts.push(`<button class="btn sec" data-ib="cancel">Cancel</button>`);
+    $('#ibActions').innerHTML=acts.join(''); $('#ibPaid').innerHTML=''; return;
+  }
+  acts.push('<button class="btn" data-ib="edit">Edit</button>');
   acts.push('<button class="btn sec" data-ib="pdf">Download PDF</button>');
   acts.push('<button class="btn sec" data-ib="print">Print</button>');
   if(isQ && !d.accepted) acts.push('<button class="btn sec" data-ib="toinv">Turn into invoice</button>');
   if(!isQ && !d.paid) acts.push('<button class="btn sec" data-ib="pay">Mark as paid</button>');
   if(!isQ && d.paid) acts.push('<button class="btn sec" data-ib="unpay">Mark as unpaid</button>');
   if(d.no) acts.push(`<button class="btn danger" data-ib="void">Void ${isQ?'quote':'invoice'}</button>`);
-  else acts.push('<button class="btn sec" data-ib="discard">Discard draft</button>');
   $('#ibActions').innerHTML=acts.join('');
   $('#ibPaid').innerHTML=d.paid?`Paid ${esc(d.paid.method)} on ${dayStr(d.paid.date)}.`:'';
 }
@@ -1290,6 +1308,7 @@ function renderIbLines(){
     <label><span>Disc %</span><input data-il="${i}" data-f="disc" value="${esc(l.disc||'')}" inputmode="decimal" placeholder="0"></label>
     <div class="ib-amt"><span>Amount</span><b id="iblt-${i}">${money(lineNet(l))}</b></div>
     <button class="btn sec ib-rm" data-ib="rm:${i}" aria-label="Remove line">✕</button></div>`).join('');
+  if(ibLocked||d.void) $('#ibLines').querySelectorAll('input').forEach(el=>el.disabled=true);
   ibTotals();
 }
 function ibTotals(){
@@ -1304,14 +1323,20 @@ function ibCommitCust(){
 }
 
 /* documents: on-screen preview, print, and PDF */
-function docHead(title,no,date){
+function docMeta(d){ // rows under the title: date, due or expiry, reference
+  const r=[['Date',dayStr(d.date)]];
+  if(d.kind==='quote') r.push(['Expires',dayStr(invDue(d))]); else if(!d.paid) r.push(['Due',dayStr(invDue(d))]);
+  if(d.ref) r.push(['Reference',d.ref]);
+  return r;
+}
+function docHead(title,no,d){
   const g=S.invCfg;
   return `<div class="doc-top"><div><b style="font-size:1.6em">THE PLANT SHACK</b><br>2 Krause St, Deception Bay QLD<br>ABN 20 651 371 470${g.email?'<br>'+esc(g.email):''}</div>
-    <div style="text-align:right"><b style="font-size:1.6em">${title}</b><br>${esc(no||'(not saved yet)')}<br>${date}</div></div>`;
+    <div style="text-align:right"><b style="font-size:1.6em">${title}</b><br>${esc(no||'(not saved yet)')}${docMeta(d).map(([k,v])=>`<br>${k}: ${esc(v)}`).join('')}</div></div>`;
 }
-function payBlock(){
+function payBlock(d){
   const g=S.invCfg;
-  return `<div class="doc-pay"><b>Payment due on receipt</b><br>
+  return `<div class="doc-pay"><b>Payment due by ${dayStr(invDue(d))}</b><br>
     ${g.bsb||g.acct?`Bank transfer: ${esc(g.acctName||'The Plant Shack')} · BSB ${esc(g.bsb)} · Account ${esc(g.acct)}<br>`:''}
     ${g.cardLink?`Pay by card online: ${esc(g.cardLink)}<br>`:'Pay by card online: link added when this is built for real<br>'}
     Or pay in store with cash or EFTPOS.</div>`;
@@ -1319,14 +1344,14 @@ function payBlock(){
 function invoiceDoc(d){
   const c=custById(d.cust)||{name:''}; const t=invTotal(d), disc=invDisc(d); const isQ=d.kind==='quote';
   const lines=d.lines.filter(l=>String(l.desc).trim()||Number(l.price)); const hasDisc=lines.some(l=>Number(l.disc)>0);
-  return `<div class="inv-doc">${d.void?`<div style="border:3px solid #b3261e;color:#b3261e;font-weight:700;text-align:center;padding:6px;margin-bottom:10px;font-size:1.4em">VOID · ${esc(d.void.reason)}</div>`:''}${docHead(isQ?'QUOTE':'TAX INVOICE', d.no, dayStr(d.date))}
+  return `<div class="inv-doc">${d.void?`<div style="border:3px solid #b3261e;color:#b3261e;font-weight:700;text-align:center;padding:6px;margin-bottom:10px;font-size:1.4em">VOID · ${esc(d.void.reason)}</div>`:''}${docHead(isQ?'QUOTE':'TAX INVOICE', d.no, d)}
     <div class="doc-to"><b>${isQ?'Quote for':'Bill to'}</b><br>${esc(c.name||'—')}${c.phone?'<br>'+esc(c.phone):''}${c.email?'<br>'+esc(c.email):''}</div>
     <table class="doc-tbl"><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Price</th>${hasDisc?'<th class="num">Disc</th>':''}<th class="num">Amount</th></tr></thead><tbody>
     ${lines.map(l=>`<tr><td>${esc(l.desc)}</td><td class="num">${esc(l.qty)}</td><td class="num">${money(Number(l.price)||0)}</td>${hasDisc?`<td class="num">${Number(l.disc)>0?esc(l.disc)+'%':''}</td>`:''}<td class="num">${money(lineNet(l))}</td></tr>`).join('')||`<tr><td colspan="${hasDisc?5:4}" style="color:#888">No items yet</td></tr>`}</tbody></table>
     <div class="doc-tot">${disc?`<div><span>Discounts</span><span>-${money(disc)}</span></div>`:''}<div><span>Total (inc GST)</span><b>${money(t)}</b></div><div><span>GST included</span><span>${money(r2(t/11))}</span></div>
     ${d.paid?`<div><span>Paid ${esc(d.paid.method)}</span><span>${dayStr(d.paid.date)}</span></div>`:''}</div>
     ${d.notes?`<p>${esc(d.notes)}</p>`:''}
-    ${isQ?'<p>This quote is valid for 30 days.</p>':d.paid?'<p><b>Paid, thank you.</b></p>':payBlock()}</div>`;
+    ${isQ?`<p>This quote is valid until ${dayStr(invDue(d))}.</p>`:d.paid?'<p><b>Paid, thank you.</b></p>':payBlock(d)}</div>`;
 }
 function printDoc(html){
   let st=$('#printPos'); if(!st){ st=document.createElement('style'); st.id='printPos'; document.head.appendChild(st); }
@@ -1351,8 +1376,8 @@ async function invoicePdfBlob(d){
   pdf.setFont('helvetica','bold'); pdf.setFontSize(16); pdf.text('THE PLANT SHACK',L,y); pdf.text(isQ?'QUOTE':'TAX INVOICE',R,y,{align:'right'});
   pdf.setFont('helvetica','normal'); pdf.setFontSize(10);
   const left=['2 Krause St, Deception Bay QLD','ABN 20 651 371 470']; if(g.email) left.push(g.email);
-  left.forEach((t,i)=>pdf.text(t,L,y+6+i*5)); pdf.text(String(d.no||''),R,y+6,{align:'right'}); pdf.text(dayStr(d.date),R,y+11,{align:'right'});
-  y+=6+left.length*5+2; pdf.setLineWidth(0.6); pdf.line(L,y,R,y); y+=8;
+  left.forEach((t,i)=>pdf.text(t,L,y+6+i*5)); pdf.text(String(d.no||''),R,y+6,{align:'right'}); const meta=docMeta(d); meta.forEach(([k,v],i)=>pdf.text(k+': '+v,R,y+11+i*5,{align:'right'}));
+  y+=6+Math.max(left.length,meta.length+1)*5+2; pdf.setLineWidth(0.6); pdf.line(L,y,R,y); y+=8;
   pdf.setFont('helvetica','bold'); pdf.text(isQ?'Quote for':'Bill to',L,y); pdf.setFont('helvetica','normal');
   [c.name,c.phone,c.email].filter(Boolean).forEach(t=>{ y+=5; pdf.text(String(t),L,y); }); y+=10;
   const lines=d.lines.filter(l=>String(l.desc).trim()||Number(l.price)); const hasDisc=lines.some(l=>Number(l.disc)>0);
@@ -1370,10 +1395,10 @@ async function invoicePdfBlob(d){
   pdf.setFontSize(10); pdf.setFont('helvetica','normal');
   if(d.notes){ y+=4; const w=pdf.splitTextToSize(d.notes,R-L); pdf.text(w,L,y); y+=w.length*5; }
   y+=4;
-  if(isQ){ pdf.text('This quote is valid for 30 days.',L,y); }
+  if(isQ){ pdf.text('This quote is valid until '+dayStr(invDue(d))+'.',L,y); }
   else if(d.paid){ pdf.setFont('helvetica','bold'); pdf.text('Paid, thank you.',L,y); }
   else {
-    const pay=['Payment due on receipt']; if(g.bsb||g.acct) pay.push(`Bank transfer: ${g.acctName||'The Plant Shack'} · BSB ${g.bsb} · Account ${g.acct}`);
+    const pay=['Payment due by '+dayStr(invDue(d))]; if(g.bsb||g.acct) pay.push(`Bank transfer: ${g.acctName||'The Plant Shack'} · BSB ${g.bsb} · Account ${g.acct}`);
     pay.push(g.cardLink?'Pay by card online: '+g.cardLink:'Pay by card online: link added when this is built for real'); pay.push('Or pay in store with cash or EFTPOS.');
     const h=pay.length*5+6; pdf.setLineWidth(0.3); pdf.rect(L,y-2,R-L,h);
     pay.forEach((tx,i)=>{ pdf.setFont('helvetica',i?'normal':'bold'); pdf.text(tx,L+3,y+3+i*5); });
@@ -1673,7 +1698,9 @@ $('#view-inv').addEventListener('click',e=>{
 $('#view-invedit').addEventListener('input',e=>{
   const t=e.target, d=invDraft; if(!d) return;
   if(t.dataset.il!=null){ const l=d.lines[Number(t.dataset.il)]; l[t.dataset.f]=t.value; $('#iblt-'+t.dataset.il).textContent=money(lineNet(l)); ibTotals(); return; }
-  if(t.id==='ibDate'){ d.date=t.value; ibTotals(); }
+  if(t.id==='ibDate'){ d.date=t.value; $('#ibDue').value=invDue(d); ibTotals(); }
+  if(t.id==='ibDue'){ d.due=t.value; ibTotals(); }
+  if(t.id==='ibRef'){ d.ref=t.value.trim(); ibTotals(); }
   if(t.id==='ibNotes'){ d.notes=t.value; ibTotals(); }
 });
 $('#view-invedit').addEventListener('change',e=>{
@@ -1694,11 +1721,13 @@ $('#view-invedit').addEventListener('click',async e=>{
     $('[data-x]').onclick=closeModal; $('#vdR').focus();
     $('#vdOk').onclick=()=>{ const r=$('#vdR').value.trim(); if(!r){ toast('Add a reason',true); return; } d.void={reason:r,date:new Date().toISOString(),staff:S.staff||''}; saveInvoice(d); logEvent('Invoice voided',`${d.no} · ${r}`,invTotal(d)); closeModal(); renderBuilder(); toast(`${d.no} voided`); };
     return; }
+  if(a==='edit'){ ibLocked=false; renderBuilder(); return; }
+  if(a==='cancel'){ const saved=S.invoices.find(x=>x.id===d.id); if(!saved||!saved.no){ invDraft=null; setView('inv'); return; } invDraft=JSON.parse(JSON.stringify(saved)); ibLocked=true; renderBuilder(); return; }
   if(!ibCommitCust()) return;
-  if(a==='save'){ saveInvoice(d); invDraft=null; setView('inv'); toast('Saved'); return; }
+  if(a==='save'){ saveInvoice(d); ibLocked=true; renderBuilder(); toast('Saved'); return; }
   if(a==='print'){ saveInvoice(d); renderBuilder(); printInvoice(d); return; }
   if(a==='pdf'){ saveInvoice(d); renderBuilder(); await downloadPdf(d); return; }
-  if(a==='toinv'){ d.accepted=true; saveInvoice(d); const inv={...JSON.parse(JSON.stringify(d)), id:'i'+Date.now(), kind:'invoice', no:null, accepted:false, fromQuote:d.no, date:isoDay(new Date()), notes:d.notes}; saveInvoice(inv); invDraft=inv; renderBuilder(); toast(`${d.no} is now invoice ${inv.no}`); return; }
+  if(a==='toinv'){ d.accepted=true; saveInvoice(d); const inv={...JSON.parse(JSON.stringify(d)), id:'i'+Date.now(), kind:'invoice', no:null, accepted:false, fromQuote:d.no, date:isoDay(new Date()), due:'', notes:d.notes}; saveInvoice(inv); invDraft=inv; ibLocked=true; renderBuilder(); toast(`${d.no} is now invoice ${inv.no}`); return; }
   if(a==='unpay'){ logEvent('Payment removed',`${d.no} was marked paid ${d.paid.method}`,invTotal(d)); d.paid=null; S.payments=S.payments.filter(p=>p.inv!==d.no); saveInvoice(d); renderBuilder(); return; }
   if(a==='pay'){ saveInvoice(d);
     modal(`<h2>Mark ${esc(d.no)} as paid</h2><p>${money(invTotal(d))}. Cash and EFTPOS taken in store go into today's end of day.</p>
