@@ -162,10 +162,10 @@ table{width:100%;border-collapse:collapse}
 .tbl .num{text-align:right}
 .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .tag.ex{background:var(--warn-soft);color:var(--warn);border-color:transparent}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 .stat{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px}
 .stat span{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.stat b{font-family:var(--f-display);font-size:30px;font-weight:600}
+.stat b{font-family:var(--f-display);font-size:30px;overflow-wrap:anywhere;font-weight:600}
 .stat.big{background:var(--ink);color:var(--bg)}
 .stat.big span{color:inherit;opacity:.75}
 .drawer{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end}
@@ -483,7 +483,7 @@ table{width:100%;border-collapse:collapse}
       <div class="actions" style="margin-top:12px">
         <button class="btn sec" id="repCsvMonths">Download monthly totals (spreadsheet)</button><button class="btn sec" id="repCsvDays">Download daily totals (spreadsheet)</button>
         <button class="btn sec" id="repCsvSales">Download every sale (spreadsheet)</button>
-        <button class="btn sec" id="repExample">Add 3 months of example sales to try it</button>
+        <button class="btn sec" id="repExample">Add 3 years of example sales to try it</button>
         <button class="btn sec" id="repClearEx">Remove example sales</button>
       </div>
     </div>
@@ -1543,7 +1543,7 @@ function repCsv(kind){
   offerFile(`Plant Shack ${kind==='days'?'daily totals':kind==='months'?'monthly totals':'sales'} ${isoDay(a)} to ${isoDay(b)}.csv`, rows.map(r=>r.map(csvCell).join(',')).join('\r\n'));
 }
 function clearExampleSales(){ S.sales=S.sales.filter(r=>!r.example); Object.keys(S.days||{}).forEach(k=>{ if(S.days[k].example) delete S.days[k]; }); save(); toast('Example sales removed'); }
-function addExampleHistory(){ // three months of made-up sales so the reports have something to show
+function addExampleHistory(){ // made-up sales so the reports have something to show: 3 months in full, then 3 years as a few lumped sales a day to save space
   let seed=7; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
   const pool=[...S.codes.map(c=>lineFromCode(c,1)), ...S.buttons.filter(x=>x.price!=null&&x.price!=='').map(x=>lineFromButton(x,1))];
   const out=[]; S.days=S.days||{};
@@ -1559,8 +1559,22 @@ function addExampleHistory(){ // three months of made-up sales so the reports ha
     }
     const k=isoDay(d), off=rnd()<0.7?0:round5((rnd()-0.5)*10); S.days[k]={float:200,counted:r2(200+cash+off),expected:r2(200+cash),example:true};
   }
+  const slim=({name,dl,cat,unit})=>({name,dl,cat,unit});
+  for(let back=3*365; back>90; back--){
+    const d=new Date(); d.setDate(d.getDate()-back); const wk=d.getDay(), m=d.getMonth();
+    const season=[1.1,0.95,1.05,1.0,0.9,0.75,0.8,0.9,1.15,1.3,1.25,1.15][m]; // spring busiest, winter quietest
+    const target=(wk===0||wk===6?4200:2300)*season*(1-0.08*back/365)*(0.85+rnd()*0.3);
+    let cash=0;
+    ['Cash','EFTPOS','EFTPOS'].forEach((method,j)=>{
+      const t=new Date(d); t.setHours(10+j*2,0,0,0);
+      const lines=Array.from({length:3},()=>{ const l=slim(pool[Math.floor(rnd()*pool.length)]); l.qty=Math.max(1,Math.round(target/3/3/(l.unit||10))); return l; });
+      const tot=totalsFor(lines,0), cashDue=method==='Cash'?round5(tot.total):tot.total; if(method==='Cash') cash=cashDue;
+      out.push({no:'', time:t.toISOString(), till:'Till '+(j+1), lines, pct:0, total:tot.total, disc:0, method, cashDue, tendered:cashDue, change:0, example:true});
+    });
+    S.days[isoDay(d)]={float:200,counted:r2(200+cash),expected:r2(200+cash),example:true};
+  }
   out.sort((x,y)=>new Date(x.time)-new Date(y.time)).forEach((r,i)=>{ r.no='E'+(i+1); r.change=r.method==='Cash'?r2(r.tendered-r.cashDue):0; });
-  S.sales=[...out,...S.sales]; save(); toast(`Added ${out.length} example sales over 3 months`);
+  S.sales=[...out,...S.sales]; save(); toast('Added 3 years of example sales');
 }
 
 /* ---------- events ---------- */
