@@ -338,12 +338,6 @@ table{width:100%;border-collapse:collapse}
   <!-- PRICES -->
   <section class="view" id="view-prices" hidden>
     <div class="card">
-      <h2>Receipts and cash drawer</h2>
-      <p>The cash drawer is plugged into the receipt printer and opens whenever something prints. OD with no sale prints a small "No sale" slip to open it.</p>
-      <div class="form" style="max-width:360px"><label>Print a receipt automatically<select id="rcMode"><option value="cash">For cash sales and refunds (opens the drawer)</option><option value="all">For every sale</option><option value="ask">Only when I tap Receipt</option></select></label>
-      <label>Receipt paper<select id="rcPaper"><option value="roll">Epson roll paper (80 × 297mm, printer trims the blank)</option><option value="fit">Sized to each receipt</option><option value="50">50mm pages (Epson "User Defined Paper" 80 × 50mm)</option></select></label></div>
-    </div>
-    <div class="card">
       <h2>Departments</h2>
       <p>The coloured department buttons on the till, in this order. Type a price then tap one to ring it up. A department can't be removed while stickers use it.</p>
       <div class="tblwrap"><table class="tbl" id="deptTable"></table></div>
@@ -361,6 +355,12 @@ table{width:100%;border-collapse:collapse}
       <div class="tblwrap"><table class="tbl" id="btnTable"></table></div>
       <div class="actions" style="margin-top:10px"><button class="btn sec" id="addBtn">Add a button</button></div>
     </div>
+    <details class="card">
+      <summary style="cursor:pointer;font-weight:600">Receipts and cash drawer</summary>
+      <p style="margin:10px 0">The cash drawer is plugged into the receipt printer and opens whenever something prints. OD with no sale prints a small "No sale" slip to open it.</p>
+      <div class="form" style="max-width:360px"><label>Print a receipt automatically<select id="rcMode"><option value="cash">For cash sales and refunds (opens the drawer)</option><option value="all">For every sale</option><option value="ask">Only when I tap Receipt</option></select></label>
+      <label>Receipt paper<select id="rcPaper"><option value="roll">Epson roll paper (80 × 297mm, printer trims the blank)</option><option value="fit">Sized to each receipt</option><option value="50">50mm pages (Epson "User Defined Paper" 80 × 50mm)</option></select></label></div>
+    </details>
     <details class="card">
       <summary style="cursor:pointer;font-weight:600;color:var(--muted)">Behind the scenes: sticker codes</summary>
       <p style="margin:10px 0">The till keeps this list itself. Each sticker barcode stands for one department at one price. You can fix a sticker's name here; scans show the new name straight away, but stickers already printed keep the old wording.</p>
