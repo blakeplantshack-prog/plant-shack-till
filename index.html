@@ -1178,7 +1178,7 @@ function invInit(){
 }
 // invoices are due 7 days after the invoice date and quotes expire after 30 days, unless changed on the document
 const addDays = (iso,n) => { const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return isoDay(d); };
-const invDue = d => d.due || addDays(d.date, d.kind==='quote'?30:7);
+const invDue = d => d.due || addDays(d.date||isoDay(new Date()), d.kind==='quote'?30:7);
 const pad4 = n => String(n).padStart(4,'0');
 const dayStr = d => new Date(d).toLocaleDateString('en-AU');
 const isoDay = d => { const x=new Date(d); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().slice(0,10); };
