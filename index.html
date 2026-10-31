@@ -373,7 +373,7 @@ table{width:100%;border-collapse:collapse}
       <h2>Quotes &amp; invoices</h2>
       <p>Prices include GST and invoices are due when sent. Tap a row to open it.</p>
       <div class="actions" style="margin-bottom:10px">
-        <button class="btn" id="newQuote">New quote</button><button class="btn" id="newInv">New invoice</button>
+        <button class="btn" id="newQuote">New quote</button><button class="btn" id="newInv">New invoice</button><button class="btn sec" id="invExample">Add example quotes &amp; invoices</button><button class="btn sec" id="invClearEx" hidden>Remove examples</button>
         <nav class="tabs" id="invFilters" style="margin-left:auto"><button data-f="open">Unpaid</button><button data-f="quotes">Quotes</button><button data-f="paid">Paid</button><button data-f="all">All</button></nav>
       </div>
       <div class="tblwrap"><table class="tbl" id="invTable"></table></div>
@@ -1192,12 +1192,35 @@ function saveInvoice(d){
   if(i>=0) S.invoices[i]=copy; else S.invoices.push(copy);
   save();
 }
+// made-up customers, quotes and invoices to try the layout; numbered EX so they never use real numbers
+function addExampleInvoices(){
+  invInit();
+  const day=n=>{ const d=new Date(); d.setDate(d.getDate()-n); return isoDay(d); };
+  const cust=(name,phone,email)=>{ const c=addCustomer(name); Object.assign(c,{phone,email,example:true}); return c.id; };
+  const sue=cust('Sue Mitchell','0412 345 678','sue.mitchell@example.com'), gt=cust('Green Thumb Landscaping','07 3204 1188','accounts@greenthumb.example.com'),
+        bay=cust('Bayside Primary School','07 3203 5500','office@bayside.example.edu.au'), tom=cust('Tom Nguyen','0433 210 987','');
+  const L=(desc,qty,price,disc)=>({desc,qty,price:String(price),disc:disc?String(disc):''});
+  const docs=[
+    {kind:'quote',cust:sue,date:day(2),notes:'Includes delivery and planting. Valid for 30 days.',lines:[L('Lilly Pilly Resilience 200mm',12,34.95,10),L('Premium Garden Mix 50L',6,18.95),L('Delivery (Deception Bay)',1,40),L('Planting labour (hours)',3,65)]},
+    {kind:'quote',cust:bay,date:day(5),notes:'Veggie garden for the Year 3 classroom. Can deliver on a pupil-free day.',lines:[L('Raised garden bed 1.2m',4,149),L('Organic veggie mix 30L',16,14.95),L('Veggie seedlings (punnet)',24,4.95,15),L('Sugar cane mulch bale',4,24.95)]},
+    {kind:'quote',cust:gt,date:day(9),accepted:true,notes:'Accepted by phone.',lines:[L('Lomandra Tanika 140mm',60,12.95,15),L('Dianella Little Rev 140mm',40,11.95,15),L('Tea Tree Mulch (bulk m³)',3,85)]},
+    {kind:'invoice',cust:gt,date:day(8),notes:'From quote Q-EX3. Payment due on receipt.',lines:[L('Lomandra Tanika 140mm',60,12.95,15),L('Dianella Little Rev 140mm',40,11.95,15),L('Tea Tree Mulch (bulk m³)',3,85),L('Delivery (Narangba)',1,55)]},
+    {kind:'invoice',cust:sue,date:day(20),paid:{method:'Bank transfer',date:new Date(Date.now()-18*864e5).toISOString()},notes:'Thanks Sue!',lines:[L('Bird of Paradise 300mm',2,79.95),L('Glazed pot 40cm, navy',2,89),L('Potting mix 30L Platinum',4,16.95)]},
+    {kind:'invoice',cust:tom,date:day(1),notes:'Hedge order, delivery Saturday morning.',lines:[L('Murraya paniculata 200mm',25,29.95,10),L('Delivery (North Lakes)',1,45)]},
+    {kind:'invoice',cust:bay,date:day(14),void:{reason:'Order changed, replaced by a new quote',date:new Date(Date.now()-12*864e5).toISOString(),staff:S.staff||''},lines:[L('Raised garden bed 1.2m',2,149)]}
+  ];
+  let q=1,i=1;
+  docs.forEach(x=>{ const d={...newInvoice(x.kind,x.cust), ...x, id:'iex'+Date.now()+Math.random().toString(36).slice(2,6), example:true}; d.no=x.kind==='quote'?'Q-EX'+(q++):'INV-EX'+(i++); S.invoices.push(d); });
+  save(); toast('Added 3 quotes and 4 invoices to look at');
+}
+function clearExampleInvoices(){ S.invoices=(S.invoices||[]).filter(x=>!x.example); S.customers=(S.customers||[]).filter(c=>!c.example); save(); toast('Examples removed'); }
 function addCustomer(name){ const c={id:'c'+Date.now()+Math.floor(Math.random()*1000), name:name||'New customer', phone:'', email:'', address:''}; S.customers.push(c); save(); return c; }
 
 /* list view */
 let invFilter='open', invDraft=null;
 function renderInv(){
   invInit();
+  $('#invClearEx').hidden=!S.invoices.some(x=>x.example); $('#invExample').hidden=S.invoices.some(x=>x.example);
   const rows=S.invoices.filter(i=> invFilter==='all' || (invFilter==='quotes'?i.kind==='quote' : invFilter==='paid'? (i.kind==='invoice'&&i.paid) : (i.kind==='invoice'&&!i.paid&&!i.void)))
     .sort((a,b)=>b.date.localeCompare(a.date)||String(b.no).localeCompare(String(a.no)));
   document.querySelectorAll('#invFilters button').forEach(b=>b.setAttribute('aria-selected',b.dataset.f===invFilter));
@@ -1572,6 +1595,8 @@ if(S.countedDay!==isoDay(new Date())){ S.counted=''; S.countedDay=isoDay(new Dat
 $('#view-eod').addEventListener('click',e=>{ const r=e.target.closest('[data-rc]'); if(r) showReceipt(S.sales.find(x=>x.no==r.dataset.rc)); });
 $('#clearExamples').addEventListener('click',()=>{ clearExampleSales(); renderEod(); });
 $('#toReports').addEventListener('click',()=>setView('rep'));
+$('#invExample').addEventListener('click',()=>{ addExampleInvoices(); invFilter='all'; renderInv(); });
+$('#invClearEx').addEventListener('click',()=>{ clearExampleInvoices(); renderInv(); });
 $('#rcMode').value=S.receiptMode||'cash';
 $('#rcMode').addEventListener('change',e=>{ S.receiptMode=e.target.value; save(); });
 $('#rcPaper').value=S.receiptPaper||'roll';
