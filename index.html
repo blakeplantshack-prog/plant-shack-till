@@ -339,7 +339,7 @@ table{width:100%;border-collapse:collapse}
       <h2>Receipts and cash drawer</h2>
       <p>The cash drawer is plugged into the receipt printer and opens whenever something prints. OD with no sale prints a small "No sale" slip to open it.</p>
       <div class="form" style="max-width:360px"><label>Print a receipt automatically<select id="rcMode"><option value="cash">For cash sales and refunds (opens the drawer)</option><option value="all">For every sale</option><option value="ask">Only when I tap Receipt</option></select></label>
-      <label>Receipt paper<select id="rcPaper"><option value="fit">Sized to each receipt</option><option value="50">50mm pages (Epson "User Defined Paper" 80 × 50mm)</option></select></label></div>
+      <label>Receipt paper<select id="rcPaper"><option value="roll">Epson roll paper (80 × 297mm, printer trims the blank)</option><option value="fit">Sized to each receipt</option><option value="50">50mm pages (Epson "User Defined Paper" 80 × 50mm)</option></select></label></div>
     </div>
     <div class="card">
       <h2>Departments</h2>
@@ -802,7 +802,10 @@ function receiptPage(html){
   let st=$('#printPos'); if(!st){ st=document.createElement('style'); st.id='printPos'; document.head.appendChild(st); }
   // some Epson drivers ignore the page length and feed a whole 297mm sheet; with a short user-defined
   // paper the receipt runs over several 50mm pages with no cut between them, so little paper is wasted
-  st.textContent= S.receiptPaper==='50' ? '@page{size:80mm 50mm;margin:0}' : `@page{size:80mm ${Math.max(40,mm)}mm;margin:0}`;
+  // silent printing puts a shorter page in the middle of the driver's 297mm sheet (blank above the receipt),
+  // so by default the page matches the sheet and the receipt sits at the top; the driver trims what's left
+  const paper=S.receiptPaper||'roll';
+  st.textContent= paper==='50' ? '@page{size:80mm 50mm;margin:0}' : paper==='fit' ? `@page{size:80mm ${Math.max(40,mm)}mm;margin:0}` : '@page{size:80mm 297mm;margin:0}';
   $('#printArea').innerHTML=html;
 }
 function printReceipt(r){
@@ -1571,7 +1574,7 @@ $('#clearExamples').addEventListener('click',()=>{ clearExampleSales(); renderEo
 $('#toReports').addEventListener('click',()=>setView('rep'));
 $('#rcMode').value=S.receiptMode||'cash';
 $('#rcMode').addEventListener('change',e=>{ S.receiptMode=e.target.value; save(); });
-$('#rcPaper').value=S.receiptPaper||'fit';
+$('#rcPaper').value=S.receiptPaper||'roll';
 $('#rcPaper').addEventListener('change',e=>{ S.receiptPaper=e.target.value; save(); });
 fillStaff();
 $('#staffName').addEventListener('change',e=>{ if(e.target.value==='__edit'){ editStaff(); return; } S.staff=e.target.value; save(); toast(`${S.staff} is serving`); });
