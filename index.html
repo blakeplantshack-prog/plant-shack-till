@@ -374,15 +374,19 @@ table{width:100%;border-collapse:collapse}
       <p>Prices include GST and invoices are due when sent. Tap a row to open it.</p>
       <div class="actions" style="margin-bottom:10px">
         <button class="btn" id="newQuote">New quote</button><button class="btn" id="newInv">New invoice</button><button class="btn sec" id="invExample">Add example quotes &amp; invoices</button><button class="btn sec" id="invClearEx" hidden>Remove examples</button>
-        <nav class="tabs" id="invFilters" style="margin-left:auto"><button data-f="open">Unpaid</button><button data-f="quotes">Quotes</button><button data-f="paid">Paid</button><button data-f="all">All</button></nav>
+      </div>
+      <div class="actions" style="margin-bottom:10px;align-items:center">
+        <nav class="tabs" id="invKind"><button data-k="invoice">Invoices</button><button data-k="quote">Quotes</button></nav>
+        <nav class="tabs" id="invFilters"></nav>
+        <input id="invFind" type="search" placeholder="Search number, name, item or amount" style="flex:1;min-width:200px;font:inherit;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);color:var(--ink)">
       </div>
       <div class="tblwrap"><table class="tbl" id="invTable"></table></div>
     </div>
-    <div class="card">
-      <h2>Customers</h2>
-      <div class="tblwrap"><table class="tbl" id="custTable"></table></div>
+    <details class="card" id="custBox">
+      <summary style="cursor:pointer;font-weight:600">Customers</summary>
+      <div class="tblwrap" style="margin-top:8px"><table class="tbl" id="custTable"></table></div>
       <div class="actions" style="margin-top:10px"><button class="btn sec" id="addCust">Add a customer</button></div>
-    </div>
+    </details>
     <details class="card">
       <summary style="cursor:pointer;font-weight:600">Invoice details (bank, email, card link)</summary>
       <div class="form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px">
@@ -1217,15 +1221,31 @@ function clearExampleInvoices(){ S.invoices=(S.invoices||[]).filter(x=>!x.exampl
 function addCustomer(name){ const c={id:'c'+Date.now()+Math.floor(Math.random()*1000), name:name||'New customer', phone:'', email:'', address:''}; S.customers.push(c); save(); return c; }
 
 /* list view */
-let invFilter='open', invDraft=null;
+let invKind='invoice', invFilter='all', invDraft=null;
+const INV_FILTERS={invoice:[['all','All'],['open','Unpaid'],['paid','Paid'],['void','Void']], quote:[['all','All'],['open','Open'],['accepted','Accepted'],['void','Void']]};
+function invMatch(i,f){
+  if(f==='void') return !!i.void;
+  if(f==='all') return true;
+  if(i.void) return false;
+  if(i.kind==='quote') return f==='accepted'? !!i.accepted : f==='open'? !i.accepted : true;
+  return f==='paid'? !!i.paid : f==='open'? !i.paid : true;
+}
+function invFound(i,q){
+  if(!q) return true;
+  const c=custById(i.cust), t=invTotal(i);
+  const hay=[i.no, c&&c.name, c&&c.phone, c&&c.email, i.notes, ...(i.lines||[]).map(l=>l.desc), t.toFixed(2), money(t)].join(' ').toLowerCase();
+  return q.toLowerCase().split(/\s+/).every(w=>hay.includes(w.replace(/^\$/,'')));
+}
 function renderInv(){
   invInit();
   $('#invClearEx').hidden=!S.invoices.some(x=>x.example); $('#invExample').hidden=S.invoices.some(x=>x.example);
-  const rows=S.invoices.filter(i=> invFilter==='all' || (invFilter==='quotes'?i.kind==='quote' : invFilter==='paid'? (i.kind==='invoice'&&i.paid) : (i.kind==='invoice'&&!i.paid&&!i.void)))
+  const q=$('#invFind').value.trim();
+  const rows=S.invoices.filter(i=> i.kind===invKind && invMatch(i,invFilter) && invFound(i,q))
     .sort((a,b)=>b.date.localeCompare(a.date)||String(b.no).localeCompare(String(a.no)));
-  document.querySelectorAll('#invFilters button').forEach(b=>b.setAttribute('aria-selected',b.dataset.f===invFilter));
+  document.querySelectorAll('#invKind button').forEach(b=>b.setAttribute('aria-selected',b.dataset.k===invKind));
+  $('#invFilters').innerHTML=INV_FILTERS[invKind].map(([f,t])=>`<button data-f="${f}" aria-selected="${f===invFilter}">${t}</button>`).join('');
   $('#invTable').innerHTML=`<thead><tr><th>No.</th><th>Customer</th><th>Date</th><th class="num">Total</th><th></th></tr></thead><tbody>${rows.map(i=>{ const st=invStatus(i), c=custById(i.cust);
-    return `<tr class="row" data-open="${i.id}" style="cursor:pointer"><td><b>${esc(i.no)}</b></td><td>${esc(c?c.name:'(no customer)')}</td><td>${dayStr(i.date)}</td><td class="num">${money(invTotal(i))}</td><td style="white-space:nowrap;text-align:right"><span class="tag ${st.cls}">${st.t}</span></td></tr>`; }).join('')||'<tr><td colspan="5">Nothing here yet</td></tr>'}</tbody>`;
+    return `<tr class="row" data-open="${i.id}" style="cursor:pointer"><td><b>${esc(i.no)}</b></td><td>${esc(c?c.name:'(no customer)')}</td><td>${dayStr(i.date)}</td><td class="num">${money(invTotal(i))}</td><td style="white-space:nowrap;text-align:right"><span class="tag ${st.cls}">${st.t}</span></td></tr>`; }).join('')||`<tr><td colspan="5">${q?'Nothing matches that search':'Nothing here yet'}</td></tr>`}</tbody>`;
   $('#custTable').innerHTML=`<thead><tr><th>Name</th><th>Phone</th><th>Email</th><th class="num">Owing</th><th></th></tr></thead><tbody>${S.customers.map(c=>`<tr>
     <td><input id="cn-${c.id}" data-c="${c.id}" data-f="name" value="${esc(c.name)}"></td>
     <td><input data-c="${c.id}" data-f="phone" value="${esc(c.phone||'')}" inputmode="tel"></td>
@@ -1236,7 +1256,7 @@ function renderInv(){
 }
 
 /* builder view */
-function openInvoice(d){ invInit(); invDraft=JSON.parse(JSON.stringify(d)); setView('invedit'); }
+function openInvoice(d){ invInit(); if(d.kind!==invKind){ invKind=d.kind; invFilter='all'; } invDraft=JSON.parse(JSON.stringify(d)); setView('invedit'); }
 function renderBuilder(){
   const d=invDraft; if(!d){ setView('inv'); return; }
   const isQ=d.kind==='quote', st=invStatus(d), c=custById(d.cust);
@@ -1595,7 +1615,7 @@ if(S.countedDay!==isoDay(new Date())){ S.counted=''; S.countedDay=isoDay(new Dat
 $('#view-eod').addEventListener('click',e=>{ const r=e.target.closest('[data-rc]'); if(r) showReceipt(S.sales.find(x=>x.no==r.dataset.rc)); });
 $('#clearExamples').addEventListener('click',()=>{ clearExampleSales(); renderEod(); });
 $('#toReports').addEventListener('click',()=>setView('rep'));
-$('#invExample').addEventListener('click',()=>{ addExampleInvoices(); invFilter='all'; renderInv(); });
+$('#invExample').addEventListener('click',()=>{ addExampleInvoices(); invFilter='all'; $('#invFind').value=''; renderInv(); });
 $('#invClearEx').addEventListener('click',()=>{ clearExampleInvoices(); renderInv(); });
 $('#rcMode').value=S.receiptMode||'cash';
 $('#rcMode').addEventListener('change',e=>{ S.receiptMode=e.target.value; save(); });
@@ -1635,6 +1655,8 @@ $('#stSheet').innerHTML=Object.entries(STYLES).map(([k,v])=>`<div class="cmp"><s
 $('#stInfo').textContent='Both designs side by side. Name band puts the name (or the department) across the top. Was / Now, Reduced and Special print in the Big price layout.';
 invInit();
 $('#invFilters').addEventListener('click',e=>{ const b=e.target.closest('[data-f]'); if(b){ invFilter=b.dataset.f; renderInv(); } });
+$('#invKind').addEventListener('click',e=>{ const b=e.target.closest('[data-k]'); if(b){ invKind=b.dataset.k; invFilter='all'; renderInv(); } });
+$('#invFind').addEventListener('input',()=>renderInv());
 $('#newQuote').addEventListener('click',()=>openInvoice(newInvoice('quote')));
 $('#newInv').addEventListener('click',()=>openInvoice(newInvoice('invoice')));
 $('#addCust').addEventListener('click',()=>{ const c=addCustomer(''); renderInv(); const el=document.getElementById('cn-'+c.id); if(el){ el.value=''; el.focus(); } });
@@ -1662,7 +1684,7 @@ $('#view-invedit').addEventListener('change',e=>{
 });
 $('#view-invedit').addEventListener('click',async e=>{
   const b=e.target.closest('[data-ib]'); if(!b) return; const a=b.dataset.ib, d=invDraft;
-  if(a==='back'){ invDraft=null; setView('inv'); return; }
+  if(a==='back'){ if(invDraft&&invDraft.kind!==invKind){ invKind=invDraft.kind; invFilter='all'; } invDraft=null; setView('inv'); return; }
   if(a==='addline'){ d.lines.push({desc:'',qty:1,price:'',disc:''}); renderIbLines(); const ins=document.querySelectorAll('#ibLines .ib-desc'); ins[ins.length-1].focus(); return; }
   if(a.startsWith('rm:')){ d.lines.splice(Number(a.slice(3)),1); if(!d.lines.length) d.lines.push({desc:'',qty:1,price:'',disc:''}); renderIbLines(); return; }
   if(a==='discard'){ invDraft=null; setView('inv'); return; }
