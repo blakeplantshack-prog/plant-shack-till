@@ -476,12 +476,12 @@ table{width:100%;border-collapse:collapse}
       <h2>Reports</h2>
       <p id="repSub">Every sale is kept. Pick a period to see the takings.</p>
       <nav class="tabs" id="repRange" style="margin-bottom:10px">
-        <button data-r="today">Today</button><button data-r="yesterday">Yesterday</button><button data-r="week">This week</button><button data-r="lastweek">Last week</button><button data-r="month">This month</button><button data-r="lastmonth">Last month</button><button data-r="fy">This financial year</button><button data-r="custom">Pick dates</button>
+        <button data-r="today">Today</button><button data-r="yesterday">Yesterday</button><button data-r="week">This week</button><button data-r="lastweek">Last week</button><button data-r="month">This month</button><button data-r="lastmonth">Last month</button><button data-r="fy">This financial year</button><button data-r="lastfy">Last financial year</button><button data-r="custom">Pick dates</button>
       </nav>
       <div class="form rep-dates" id="repDates" hidden><label>From<input type="date" id="repFrom"></label><label>To<input type="date" id="repTo"></label></div>
       <div class="stats" id="repStats"></div>
       <div class="actions" style="margin-top:12px">
-        <button class="btn sec" id="repCsvDays">Download daily totals (spreadsheet)</button>
+        <button class="btn sec" id="repCsvMonths">Download monthly totals (spreadsheet)</button><button class="btn sec" id="repCsvDays">Download daily totals (spreadsheet)</button>
         <button class="btn sec" id="repCsvSales">Download every sale (spreadsheet)</button>
         <button class="btn sec" id="repExample">Add 3 months of example sales to try it</button>
         <button class="btn sec" id="repClearEx">Remove example sales</button>
@@ -1471,6 +1471,7 @@ function repBounds(){
   if(repRange==='month'){ a=new Date(t.getFullYear(),t.getMonth(),1); }
   if(repRange==='lastmonth'){ a=new Date(t.getFullYear(),t.getMonth()-1,1); b=new Date(t.getFullYear(),t.getMonth(),0); }
   if(repRange==='fy'){ a=new Date(t.getMonth()>=6?t.getFullYear():t.getFullYear()-1,6,1); }
+  if(repRange==='lastfy'){ const y=t.getMonth()>=6?t.getFullYear():t.getFullYear()-1; a=new Date(y-1,6,1); b=new Date(y,5,30); }
   if(repRange==='custom'){ const f=$('#repFrom').value, to=$('#repTo').value; if(f) a=new Date(f+'T00:00'); if(to) b=new Date(to+'T00:00'); if(b<a) [a,b]=[b,a]; }
   const end=new Date(b); end.setHours(23,59,59,999);
   return {a, b:end};
@@ -1526,7 +1527,12 @@ async function offerFile(name,text){
 function repCsv(kind){
   const {a,b}=repBounds(); const ts=S.sales.filter(x=>{ const d=new Date(x.time); return d>=a&&d<=b; }).sort((x,y)=>new Date(x.time)-new Date(y.time));
   const rows=[];
-  if(kind==='days'){
+  if(kind==='months'){
+    rows.push(['Month','Sales','Cash','EFTPOS','Invoiced','Discounts','GST included','Total']);
+    const g={}; ts.forEach(r=>{ const k=isoDay(r.time).slice(0,7); (g[k]=g[k]||[]).push(r); });
+    let all=[]; Object.keys(g).sort().forEach(k=>{ const s=sumUp(g[k],[]); all=all.concat(g[k]); rows.push([k,s.n,s.cash,s.eft,s.acc,s.disc,s.gst,s.total]); });
+    const s=sumUp(all,[]); rows.push(['Total',s.n,s.cash,s.eft,s.acc,s.disc,s.gst,s.total]);
+  } else if(kind==='days'){
     rows.push(['Date','Sales','Cash','EFTPOS','Invoiced','Discounts','GST included','Total','Drawer counted','Drawer expected']);
     const g={}; ts.forEach(r=>{ (g[isoDay(r.time)]=g[isoDay(r.time)]||[]).push(r); });
     Object.keys(g).sort().forEach(k=>{ const s=sumUp(g[k],[]), d=(S.days||{})[k]||{}; rows.push([k,s.n,s.cash,s.eft,s.acc,s.disc,s.gst,s.total,d.counted??'',d.expected??'']); });
@@ -1534,7 +1540,7 @@ function repCsv(kind){
     rows.push(['Date','Time','Sale','Till','Staff','Paid','Item','Department','Qty','Amount','Sale total','Refund reason','Customer']);
     ts.forEach(r=>r.lines.forEach((l,i)=>{ const c=calcLine(l,r.pct); rows.push([isoDay(r.time),new Date(r.time).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}),r.no,r.till||'',r.staff||'',r.method,l.name,l.dl||catById(l.cat).label,l.qty,c.net,i===0?r.total:'',i===0&&r.refund?r.refund.reason:'',i===0&&r.buyer?[r.buyer.name,r.buyer.abn].filter(Boolean).join(' '):'']); }));
   }
-  offerFile(`Plant Shack ${kind==='days'?'daily totals':'sales'} ${isoDay(a)} to ${isoDay(b)}.csv`, rows.map(r=>r.map(csvCell).join(',')).join('\r\n'));
+  offerFile(`Plant Shack ${kind==='days'?'daily totals':kind==='months'?'monthly totals':'sales'} ${isoDay(a)} to ${isoDay(b)}.csv`, rows.map(r=>r.map(csvCell).join(',')).join('\r\n'));
 }
 function clearExampleSales(){ S.sales=S.sales.filter(r=>!r.example); Object.keys(S.days||{}).forEach(k=>{ if(S.days[k].example) delete S.days[k]; }); save(); toast('Example sales removed'); }
 function addExampleHistory(){ // three months of made-up sales so the reports have something to show
@@ -1653,7 +1659,7 @@ $('#repRange').addEventListener('click',e=>{ const b=e.target.closest('[data-r]'
   renderRep(); });
 $('#repFrom').addEventListener('change',renderRep); $('#repTo').addEventListener('change',renderRep);
 $('#repFind').addEventListener('input',()=>renderRepSales());
-$('#repCsvDays').addEventListener('click',()=>repCsv('days')); $('#repCsvSales').addEventListener('click',()=>repCsv('sales'));
+$('#repCsvDays').addEventListener('click',()=>repCsv('days')); $('#repCsvMonths').addEventListener('click',()=>repCsv('months')); $('#repCsvSales').addEventListener('click',()=>repCsv('sales'));
 $('#repExample').addEventListener('click',()=>{ addExampleHistory(); repRange='lastmonth'; renderRep(); });
 $('#repClearEx').addEventListener('click',()=>{ clearExampleSales(); renderRep(); });
 $('#view-rep').addEventListener('click',e=>{
